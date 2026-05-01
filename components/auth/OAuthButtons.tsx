@@ -1,15 +1,22 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 
-export default function OAuthButtons() {
+export default function OAuthButtons({ callbackUrl }: { callbackUrl?: string }) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+  const supabase = createClient();
 
-  const handleOAuth = async (provider: string) => {
+  const handleOAuth = async (provider: any) => {
     setLoadingProvider(provider);
     try {
-      await signIn(provider, { callbackUrl: "/dashboard" });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback${callbackUrl ? `?next=${encodeURIComponent(callbackUrl)}` : ''}`,
+        },
+      });
+      if (error) throw error;
     } catch (error) {
       console.error("OAuth sign-in failed:", error);
     } finally {

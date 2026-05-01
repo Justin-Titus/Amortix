@@ -8,7 +8,8 @@ import {
   registerSchema,
   type RegisterInput,
 } from "@/lib/validations/auth.schema";
-import { registerUser } from "@/app/actions/auth";
+import { createClient } from "@/lib/supabase/client";
+import { syncUserWithPrisma, isPasswordLeaked } from "@/app/actions/auth";
 import OAuthButtons from "./OAuthButtons";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
@@ -49,6 +50,7 @@ export default function RegisterForm() {
     resolver: zodResolver(registerSchema),
   });
 
+  const supabase = createClient();
   const password = watch("password", "");
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
@@ -57,11 +59,43 @@ export default function RegisterForm() {
     setError(null);
 
     try {
-      const result = await registerUser(data);
+      // Check for leaked password first
+      const pwned = await isPasswordLeaked(data.password);
+      if (pwned) {
+        setError("This password has been compromised in a data breach. Please select a different password.");
+        setIsSubmitting(false);
+        return;
+      }
 
-      if (result?.error) {
-        setError(result.error);
-      } else if (result?.success) {
+      // 1. Sign up with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.name,
+          },
+        },
+      });
+
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+
+      if (authData.user) {
+        // 2. Sync with Prisma
+        const syncResult = await syncUserWithPrisma({
+          id: authData.user.id,
+          email: data.email,
+          name: data.name,
+        });
+
+        if (!syncResult?.success) {
+          setError("Failed to sync user data. Please try again.");
+          return;
+        }
+
         setSuccess(true);
       } else {
         setError("Registration failed. Please try again.");
@@ -114,7 +148,7 @@ export default function RegisterForm() {
       </div>
 
       <div className="glass-panel p-8">
-        <OAuthButtons />
+        <OAuthButtons callbackUrl="/dashboard" />
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">

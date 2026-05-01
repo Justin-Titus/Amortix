@@ -1,6 +1,6 @@
 import { getLoans } from "@/app/actions/loan";
 import DashboardHome from "@/components/dashboard/DashboardHome";
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = {
@@ -9,7 +9,8 @@ export const metadata = {
 };
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const loans = await getLoans();
 
@@ -22,14 +23,14 @@ export default async function DashboardPage() {
     totalOutstanding: number;
   }> = [];
 
-  if (session?.user?.id) {
+  if (user?.id) {
     try {
       [profile, snapshots] = await Promise.all([
         prisma.financialProfile.findUnique({
-          where: { userId: session.user.id },
+          where: { userId: user.id },
         }),
         prisma.healthSnapshot.findMany({
-          where: { userId: session.user.id },
+          where: { userId: user.id },
           orderBy: { capturedAt: "asc" },
           take: 12,
         }),
@@ -56,7 +57,7 @@ export default async function DashboardPage() {
   return (
     <DashboardHome
       loans={loans}
-      userName={session?.user?.name ?? "there"}
+      userName={user?.user_metadata?.full_name ?? "there"}
       profile={mappedProfile}
       snapshots={snapshots.map((snapshot) => ({
         id: snapshot.id,

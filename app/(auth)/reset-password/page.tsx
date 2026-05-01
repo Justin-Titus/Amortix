@@ -11,8 +11,6 @@ import Link from "next/link";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 
 function ResetPasswordForm() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token") || "";
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,10 +21,10 @@ function ResetPasswordForm() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(resetPasswordSchema),
-    defaultValues: { token, password: "", confirmPassword: "" },
+    defaultValues: { password: "", confirmPassword: "" },
   });
 
-  const onSubmit = async (data: { password: string; confirmPassword: string; token: string }) => {
+  const onSubmit = async (data: { password: string; confirmPassword: string }) => {
     setIsSubmitting(true);
     setError(null);
 
@@ -66,17 +64,6 @@ function ResetPasswordForm() {
     );
   }
 
-  if (!token) {
-    return (
-      <div className="card text-center py-12">
-        <h2 className="mb-2 text-xl font-heading font-medium text-amortix-navy">Invalid link</h2>
-        <p className="mb-6 text-sm text-amortix-slate">This reset link is invalid or has expired.</p>
-        <Link href="/forgot-password" className="text-sm font-medium text-amortix-emerald hover:text-emerald-700 transition-colors">
-          Request a new link
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -92,7 +79,6 @@ function ResetPasswordForm() {
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-amortix-red">{error}</div>
           )}
-          <input type="hidden" {...register("token")} />
           <div>
             <label htmlFor="reset-password" className="mb-1.5 block text-sm font-medium text-amortix-navy">New password</label>
             <input

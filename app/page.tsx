@@ -8,7 +8,17 @@ import TrustSection from "@/components/landing/TrustSection";
 import CtaBanner from "@/components/landing/CtaBanner";
 import LandingFooter from "@/components/landing/LandingFooter";
 
-export default function LandingPage() {
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="min-h-screen bg-amortix-frost text-amortix-text-primary">
       <LandingNav />

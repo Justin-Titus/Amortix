@@ -4,7 +4,7 @@ import { formatCurrency } from "@/lib/calculations/emi";
 import LoanActions from "@/components/loans/LoanActions";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Building2, Receipt, Percent, History } from "lucide-react";
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import DefaultRiskCard from "@/components/ml/DefaultRiskCard";
 import LoanHealthScoreBadge from "@/components/analysis/LoanHealthScoreBadge";
@@ -23,10 +23,12 @@ function differenceInMonths(from: Date, to: Date): number {
 export default async function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const { id } = resolvedParams;
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
   
   const loanData = await prisma.loan.findFirst({
-    where: { id, userId: session?.user?.id },
+    where: { id, userId: userId },
     include: {
       payments: {
         orderBy: { paymentDate: "desc" },
@@ -47,14 +49,14 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
     emiAmount: number;
   }> = [];
 
-  if (session?.user?.id) {
+  if (userId) {
     try {
       [profile, userLoans] = await Promise.all([
         prisma.financialProfile.findUnique({
-          where: { userId: session.user.id },
+          where: { userId: userId },
         }),
         prisma.loan.findMany({
-          where: { userId: session.user.id },
+          where: { userId: userId },
         }),
       ]);
     } catch (error) {

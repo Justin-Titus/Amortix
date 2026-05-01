@@ -134,8 +134,29 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
     return `Your highest-cost loan is at ${highest.interestRate}% - prioritize it in your strategy.`;
   };
 
-  const insightText =
-    "Shifting just ₹5,000 per month toward high-interest debt can shorten your payoff horizon by 6 to 9 months and reduce total interest outflow significantly.";
+  const insightText = useMemo(() => {
+    if (!hasLoans) {
+      return "Add your first loan to begin tracking repayment momentum, run comparisons, and access personalized AI insights.";
+    }
+
+    const highest = loans.reduce((best, candidate) => 
+      candidate.interestRate > best.interestRate ? candidate : best, loans[0]
+    );
+
+    if (emiToIncomeRatio > 40) {
+      return `Warning: Your current monthly EMI obligations consume ${emiToIncomeRatio}% of your reported income. This is above the recommended 40% threshold. Focus on paying down high-cost balances.`;
+    }
+
+    if (highest && highest.interestRate > 12) {
+      return `Targeting your payoff strategy around the "${highest.name}" loan at ${highest.interestRate}% could save you thousands in interest over the lifetime of the debt.`;
+    }
+
+    if (loans.length > 1) {
+      return `You have ${loans.length} active loans. Repaying the highest-rate balance first using the Avalanche strategy will mathematically save you the most interest and shorten your payoff.`;
+    }
+
+    return `By allocating an additional ₹5,000 toward your outstanding debt, you can shorten your payoff horizon and clear the balance much faster.`;
+  }, [hasLoans, loans, emiToIncomeRatio]);
 
   const heroStats = [
     { label: "Open loans", value: String(loans.length), muted: !hasLoans },
@@ -362,7 +383,8 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
               </div>
 
               <ChartContainer height={176}>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+
                   <BarChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                     <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748B" }} />

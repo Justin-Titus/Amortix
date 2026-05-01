@@ -1,16 +1,22 @@
 import DashboardShell from "@/components/layout/DashboardShell";
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { captureMonthlySnapshot } from "@/app/actions/snapshot";
+import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (session?.user?.id) {
-    void captureMonthlySnapshot(session.user.id).catch((error) => {
+  if (!user) {
+    redirect("/login");
+  }
+
+  if (user?.id) {
+    void captureMonthlySnapshot(user.id).catch((error) => {
       console.error("Failed to capture monthly snapshot:", error);
     });
   }

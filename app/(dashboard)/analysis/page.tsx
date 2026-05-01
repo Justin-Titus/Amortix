@@ -1,7 +1,7 @@
 import { getLoans } from "@/app/actions/loan";
 import { getUserSettings } from "@/app/actions/settings";
 import LiveStrategyModeler from "@/components/dashboard/LiveStrategyModeler";
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { buildLoanHeroStats } from "@/lib/calculations/loan-summary";
 import { PageHero } from "@/components/layout/PageHero";
 import { Sparkles } from "lucide-react";
@@ -25,9 +25,10 @@ type AnalysisUser = {
 };
 
 export default async function AnalysisPage() {
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { user: supabaseUser } } = await supabase.auth.getUser();
 
-  if (!session?.user?.id) {
+  if (!supabaseUser) {
     redirect("/login");
   }
 
@@ -50,7 +51,7 @@ export default async function AnalysisPage() {
       />
 
       <div className="space-y-8">
-        <LiveStrategyModeler loans={loans} profile={user?.financialProfile ?? null} userName={session.user.name ?? "there"} />
+        <LiveStrategyModeler loans={loans} profile={user?.financialProfile ?? null} userName={supabaseUser.user_metadata?.full_name ?? "there"} />
       </div>
     </PageWrapper>
   );

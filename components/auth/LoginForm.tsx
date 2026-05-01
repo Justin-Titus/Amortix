@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth.schema";
 import OAuthButtons from "./OAuthButtons";
 import Link from "next/link";
@@ -31,35 +31,24 @@ export default function LoginForm({
   });
 
   const router = useRouter();
+  const supabase = createClient();
 
   const onSubmit = async (data: LoginInput) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const result = await signIn("credentials", {
-        redirect: false,
+      const { error: authError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
-        callbackUrl: callbackUrl || "/dashboard",
       });
 
-      if (!result) {
-        setError("An unexpected error occurred. Please try again.");
+      if (authError) {
+        setError(authError.message === "Invalid login credentials" ? "Invalid email or password" : authError.message);
         return;
       }
 
-      if (result.error) {
-        setError("Invalid email or password");
-        return;
-      }
-
-      if (result.ok) {
-        router.push(callbackUrl || "/dashboard");
-        return;
-      }
-
-      setError("An unexpected error occurred. Please try again.");
+      window.location.href = callbackUrl || "/dashboard";
     } catch (error) {
       const message =
         error instanceof Error
@@ -86,7 +75,7 @@ export default function LoginForm({
       </div>
 
       <div className="glass-panel p-8">
-        <OAuthButtons />
+        <OAuthButtons callbackUrl={callbackUrl} />
 
         <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">

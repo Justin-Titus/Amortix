@@ -191,9 +191,7 @@ function runStrategy(
   }
 
   // Calculate savings vs minimum payment
-  const baseline = strategy !== "avalanche" || extraBudget > 0
-    ? calculateMinimumPaymentBaseline(inputLoans)
-    : { totalInterest, months: month };
+  const baseline = calculateMinimumPaymentBaseline(inputLoans);
 
   const payoffDate = new Date();
   payoffDate.setMonth(payoffDate.getMonth() + month);

@@ -1,277 +1,120 @@
 "use server";
 
-import bcrypt from "bcryptjs";
-import crypto from "crypto";
+import { createClient } from "@/lib/supabase/server";
+
 import { prisma } from "@/lib/prisma";
-import { signIn } from "@/lib/auth";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { logInfo, logWarn, reportError } from "@/lib/logger";
+import { logInfo, reportError } from "@/lib/logger";
 import { withServerAction } from "@/lib/server-action-wrapper";
 import {
   registerSchema,
-  loginSchema,
-  forgotPasswordSchema,
-  resetPasswordSchema,
-  getFirstZodError,
 } from "@/lib/validations/auth.schema";
-import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email";
-import { after } from "next/server";
 
-function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
-
-export async function registerUser(formData: {
-  name: string;
+/**
+ * Creates a record in the Prisma User table for a user that just signed up via Supabase.
+ * This ensures that existing relations (loans, etc.) still work.
+ */
+export async function syncUserWithPrisma(data: {
+  id: string;
   email: string;
-  password: string;
-  confirmPassword: string;
+  name?: string;
 }) {
-  return await withServerAction("registerUser", async () => {
-    const validated = registerSchema.safeParse(formData);
-    if (!validated.success) {
-      return { error: getFirstZodError(validated.error) };
-    }
+  return await withServerAction("syncUserWithPrisma", async () => {
+    const { id, email, name } = data;
 
-    const { name, email, password } = validated.data;
-
-    if (!process.env.DATABASE_URL) {
-      return { error: "Database connection is not configured. Please set DATABASE_URL." };
-    }
-
-    // Check if user already exists
+    // Check if user already exists in Prisma
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { id },
     });
 
     if (existingUser) {
-      return { error: "An account with this email already exists" };
+      return { success: true, userId: existingUser.id };
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
+    // Create user in Prisma using the Supabase UUID as the ID
     const user = await prisma.user.create({
       data: {
-        name,
+        id,
         email,
-        password: hashedPassword,
+        name,
+        emailVerified: new Date(), // Supabase handles verification
       },
     });
 
-    // Generate verification token
-    const token = crypto.randomBytes(32).toString("hex");
-    const hashedToken = hashToken(token);
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    await prisma.verificationToken.create({
-      data: {
-        userId: user.id,
-        token: hashedToken,
-        type: "EMAIL_VERIFICATION",
-        expires,
-      },
-    });
-
-    // Send verification email after the response so signup still succeeds.
-    after(() => {
-      sendVerificationEmail(email, token, name).catch((err) => {
-        reportError(err, { email, userId: user.id, flow: "email_verification" });
-      });
-    });
-
-    logInfo("register_success", { userId: user.id, email });
-    return { success: true };
+    logInfo("user_prisma_sync_success", { userId: user.id, email });
+    return { success: true, userId: user.id };
   });
 }
 
-export async function loginUser(formData: {
-  email: string;
-  password: string;
-  callbackUrl?: string;
-}) {
-  const validated = loginSchema.safeParse(formData);
-  if (!validated.success) {
-    return { error: getFirstZodError(validated.error) };
-  }
 
-  const user = await prisma.user.findUnique({ where: { email: formData.email } });
-
-  if (user) {
-    const rateLimit = await checkRateLimit(user.id, "login");
-    if (!rateLimit.allowed) {
-      logWarn("rate_limit_exceeded", {
-        userId: user.id,
-        endpoint: "login",
-        remaining: rateLimit.remaining,
-        resetIn: rateLimit.resetIn,
-      });
-      return { error: "Too many login attempts. Please try again later." };
-    }
-  }
-
-  let result;
-  try {
-    result = await signIn("credentials", {
-      email: formData.email,
-      password: formData.password,
-      redirect: false,
-    });
-  } catch (error) {
-    reportError(error, { flow: "login", email: formData.email });
-    logWarn("login_failed", {
-      email: formData.email,
-      userId: user?.id,
-      error: "Auth provider error",
-    });
-    return { error: "Invalid email or password" };
-  }
-
-  if (!result || typeof result !== "object") {
-    logWarn("login_failed", {
-      email: formData.email,
-      userId: user?.id,
-      error: "Unexpected response from auth provider",
-      resultType: typeof result,
-    });
-    return { error: "Invalid login response. Please try again later." };
-  }
-
-  if (!result.ok || result.error) {
-    logWarn("login_failed", {
-      email: formData.email,
-      userId: user?.id,
-      error: "Invalid credentials",
-    });
-    return { error: "Invalid email or password" };
-  }
-
-  if (user && !user.emailVerified) {
-    return {
-      error:
-        "Your email address is not verified yet. Please check your inbox and verify your account before signing in.",
-    };
-  }
-
-  logInfo("login_success", { email: formData.email, userId: user?.id });
-  return {
-    success: true,
-    redirectTo: formData.callbackUrl || "/dashboard",
-  };
-}
-
-export async function forgotPassword(formData: { email: string }) {
+/**
+ * Sends a password reset email using Supabase.
+ */
+export async function forgotPassword(data: { email: string }) {
   return await withServerAction("forgotPassword", async () => {
-    const validated = forgotPasswordSchema.safeParse(formData);
-    if (!validated.success) {
-      return { error: getFirstZodError(validated.error) };
-    }
-
-    const { email } = validated.data;
-    const user = await prisma.user.findUnique({ where: { email } });
-
-    // Always return success to prevent email enumeration
-    if (!user) {
-      return { success: true };
-    }
-
-    const rateLimit = await checkRateLimit(user.id, "forgot-password");
-    if (!rateLimit.allowed) {
-      logWarn("rate_limit_exceeded", {
-        userId: user.id,
-        endpoint: "forgot-password",
-        remaining: rateLimit.remaining,
-        resetIn: rateLimit.resetIn,
-      });
-      return { success: true };
-    }
-
-    // Delete any existing reset tokens
-    await prisma.verificationToken.deleteMany({
-      where: { userId: user.id, type: "PASSWORD_RESET" },
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/auth/callback?next=/reset-password`,
     });
 
-    // Generate new token
-    const token = crypto.randomBytes(32).toString("hex");
-    const hashedToken = hashToken(token);
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    if (error) {
+      return { error: error.message };
+    }
 
-    await prisma.verificationToken.create({
-      data: {
-        userId: user.id,
-        token: hashedToken,
-        type: "PASSWORD_RESET",
-        expires,
-      },
-    });
-
-    after(() => {
-      sendPasswordResetEmail(email, token).catch((err) => {
-        reportError(err, { userId: user.id, email, flow: "password_reset_email" });
-      });
-    });
-
-    logInfo("forgot_password_requested", { userId: user.id, email });
     return { success: true };
   });
 }
 
-export async function resetPassword(formData: {
-  password: string;
-  confirmPassword: string;
-  token: string;
-}) {
-  const validated = resetPasswordSchema.safeParse(formData);
-  if (!validated.success) {
-    return { error: getFirstZodError(validated.error) };
-  }
+/**
+ * Resets the password using the current session (Supabase handles the token automatically if redirected correctly).
+ */
+export async function resetPassword(data: { password: string }) {
+  return await withServerAction("resetPassword", async () => {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.updateUser({
+      password: data.password,
+    });
 
-  const { token, password } = validated.data;
-  const hashedToken = hashToken(token);
-
-  // Find valid token
-  const tokenRecord = await prisma.verificationToken.findUnique({
-    where: { token: hashedToken },
-  });
-
-  if (!tokenRecord || tokenRecord.type !== "PASSWORD_RESET") {
-    logWarn("password_reset_invalid", { token: hashedToken });
-    return { error: "Invalid or expired reset link" };
-  }
-
-  if (tokenRecord.userId) {
-    const rateLimit = await checkRateLimit(tokenRecord.userId, "reset-password");
-    if (!rateLimit.allowed) {
-      logWarn("rate_limit_exceeded", {
-        userId: tokenRecord.userId,
-        endpoint: "reset-password",
-        remaining: rateLimit.remaining,
-        resetIn: rateLimit.resetIn,
-      });
-      return { error: "Too many password reset attempts. Please try again later." };
+    if (error) {
+      return { error: error.message };
     }
-  }
 
-  if (tokenRecord.expires < new Date()) {
-    await prisma.verificationToken.delete({ where: { id: tokenRecord.id } });
-    return { error: "Reset link has expired. Please request a new one." };
-  }
-
-  if (!tokenRecord.userId) {
-    return { error: "Invalid reset link" };
-  }
-
-  // Update password
-  const hashedPassword = await bcrypt.hash(password, 10);
-  await prisma.user.update({
-    where: { id: tokenRecord.userId },
-    data: { password: hashedPassword },
+    return { success: true };
   });
+}
 
-  // Delete used token
-  await prisma.verificationToken.delete({ where: { id: tokenRecord.id } });
+import crypto from "crypto";
 
-  logInfo("password_reset_success", { userId: tokenRecord.userId });
-  return { success: true };
+/**
+ * Checks if a password was previously leaked using the HaveIBeenPwned API range check.
+ */
+export async function isPasswordLeaked(password: string): Promise<boolean> {
+  if (!password) return false;
+  
+  const hash = crypto.createHash("sha1").update(password).digest("hex").toUpperCase();
+  const prefix = hash.slice(0, 5);
+  const suffix = hash.slice(5);
+
+  try {
+    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+      next: { revalidate: 86400 } // Cache for 24 hours
+    });
+    if (!response.ok) return false;
+
+    const data = await response.text();
+    const hashes = data.split("\n");
+
+    return hashes.some((h) => h.trim().split(":")[0] === suffix);
+  } catch (err) {
+    console.error("Password check failed:", err);
+    return false; // Fail open to not block signups
+  }
+}
+
+// Deprecated actions that were for NextAuth
+export async function registerUser() {
+  return { error: "This action is deprecated. Please use Supabase Auth on the client." };
+}
+
+export async function loginUser() {
+  return { error: "This action is deprecated. Please use Supabase Auth on the client." };
 }

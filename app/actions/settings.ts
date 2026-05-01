@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { withServerAction } from "@/lib/server-action-wrapper";
 
@@ -41,9 +41,10 @@ async function withSettingsDbGuard<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 export async function getUserSettings() {
-  const session = await auth();
-  const userId = session?.user?.id;
-  const userEmail = session?.user?.email;
+  const supabase = await createClient();
+  const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+  const userId = supabaseUser?.id;
+  const userEmail = supabaseUser?.email;
 
   if (!userId && !userEmail) {
     throw new Error("Unauthorized: no active session");
@@ -82,9 +83,10 @@ type ExistingFinancialProfile = {
 
 export async function updateUserSettings(data: z.infer<typeof settingsSchema>) {
   return await withServerAction("updateUserSettings", async () => {
-    const session = await auth();
-    const userId = session?.user?.id;
-    const userEmail = session?.user?.email;
+    const supabase = await createClient();
+    const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+    const userId = supabaseUser?.id;
+    const userEmail = supabaseUser?.email;
 
     if (!userId && !userEmail) {
       throw new Error("Unauthorized");
@@ -157,9 +159,10 @@ export async function updateUserSettings(data: z.infer<typeof settingsSchema>) {
 
 export async function updateOnboardingProgress(step: number) {
   return await withServerAction("updateOnboardingProgress", async () => {
-    const session = await auth();
-    const userId = session?.user?.id;
-    const userEmail = session?.user?.email;
+    const supabase = await createClient();
+    const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+    const userId = supabaseUser?.id;
+    const userEmail = supabaseUser?.email;
 
     if (!userId && !userEmail) {
       throw new Error("Unauthorized");

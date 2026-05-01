@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck, Loader2, Menu, UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -42,7 +42,17 @@ const pageContextMap: Record<string, string> = {
 };
 
 export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: DashboardHeaderProps) {
-  const { data: session } = useSession();
+  const [user, setUser] = useState<any>(null);
+  const supabase = createClient();
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
+
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -57,7 +67,7 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
     day: "numeric",
     month: "short",
   });
-  const userInitial = session?.user?.name?.trim()?.charAt(0)?.toUpperCase() ?? "U";
+  const userInitial = user?.user_metadata?.full_name?.trim()?.charAt(0)?.toUpperCase() ?? user?.email?.charAt(0)?.toUpperCase() ?? "U";
   const unreadCount = notifications.filter((item) => !item.isRead).length;
   const hasUnread = unreadCount > 0;
 

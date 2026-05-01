@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { withServerAction } from "@/lib/server-action-wrapper";
@@ -17,14 +17,15 @@ export type NotificationRecord = {
 };
 
 export async function getUserNotifications(limit = 8): Promise<NotificationRecord[]> {
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session?.user?.id) {
+  if (!user?.id) {
     return [];
   }
 
   const notifications = await prisma.notification.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     take: Math.max(1, Math.min(limit, 20)),
   });
@@ -50,19 +51,20 @@ export async function getUserNotifications(limit = 8): Promise<NotificationRecor
 
 export async function markNotificationAsRead(notificationId: string) {
   return await withServerAction("markNotificationAsRead", async () => {
-    const session = await auth();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       throw new Error("Unauthorized");
     }
 
-    const rl = await enforceRateLimit(session.user.id, "mark-notification");
+    const rl = await enforceRateLimit(user.id, "mark-notification");
     if (!rl.allowed) return { error: "Too many requests. Please try again later." };
 
     await prisma.notification.updateMany({
       where: {
         id: notificationId,
-        userId: session.user.id,
+        userId: user.id,
         isRead: false,
       },
       data: { isRead: true },
@@ -75,18 +77,19 @@ export async function markNotificationAsRead(notificationId: string) {
 
 export async function markAllNotificationsAsRead() {
   return await withServerAction("markAllNotificationsAsRead", async () => {
-    const session = await auth();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       throw new Error("Unauthorized");
     }
 
-    const rl = await enforceRateLimit(session.user.id, "mark-all-notifications");
+    const rl = await enforceRateLimit(user.id, "mark-all-notifications");
     if (!rl.allowed) return { error: "Too many requests. Please try again later." };
 
     await prisma.notification.updateMany({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         isRead: false,
       },
       data: { isRead: true },

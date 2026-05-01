@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { withServerAction } from "@/lib/server-action-wrapper";
 import { loanSchema, type LoanInput } from "@/lib/validations/loan.schema";
@@ -45,9 +45,10 @@ function addOneMonth(date: Date) {
 
 export async function createLoan(data: LoanInput) {
   return await withServerAction("createLoan", async () => {
-    const session = await auth();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const userId = session?.user?.id;
+    const userId = user?.id;
     if (!userId) {
       return { error: "You must be logged in to add a loan." };
     }
@@ -99,8 +100,9 @@ export async function createLoan(data: LoanInput) {
 }
 
 export async function getLoans(): Promise<LoanRecord[]> {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
 
   if (!userId) {
     return [];
@@ -119,8 +121,9 @@ export async function getLoans(): Promise<LoanRecord[]> {
 }
 
 export async function getLoan(id: string): Promise<LoanRecord | null> {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
 
   if (!userId) {
     return null;
@@ -138,8 +141,9 @@ export async function getLoan(id: string): Promise<LoanRecord | null> {
 }
 
 export async function updateLoan(id: string, data: LoanInput) {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
 
   if (!userId) {
     return { error: "You must be logged in to update a loan." };
@@ -181,8 +185,9 @@ export async function updateLoan(id: string, data: LoanInput) {
 }
 
 export async function deleteLoan(id: string) {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
 
   if (!userId) {
     return { error: "You must be logged in to delete a loan." };
@@ -212,8 +217,9 @@ export async function deleteLoan(id: string) {
 }
 
 export async function recordPayment(loanId: string, data: z.input<typeof paymentSchema>) {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
 
   if (!userId) {
     return { error: "You must be logged in to record a payment." };

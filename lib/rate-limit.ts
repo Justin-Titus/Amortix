@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 const MAX_REQUESTS = 20;
@@ -11,6 +12,31 @@ export async function checkRateLimit(
   userId: string,
   endpoint: string
 ): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
+  // Just-in-Time sync of the user into Prisma if they don't exist
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!existingUser) {
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user && user.id === userId) {
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email || `${user.id}@placeholder.com`,
+            name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+            emailVerified: user.email_confirmed_at ? new Date(user.email_confirmed_at) : new Date(),
+          },
+        });
+      }
+    } catch (err) {
+      console.error("Just-in-time user sync failed in rate limiter:", err);
+    }
+  }
+
   const now = new Date();
   // Floor to current hour
   const windowStart = new Date(

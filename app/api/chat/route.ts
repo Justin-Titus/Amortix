@@ -1,7 +1,7 @@
 import { convertToModelMessages, type UIMessage } from "ai";
 import { streamAIChat } from "@/lib/ai";
 import { formatCurrency } from "@/lib/calculations/emi";
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logWarn, reportError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
@@ -75,15 +75,17 @@ async function buildFinancialContext(userId: string) {
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) {
       return new Response("Unauthorized", { status: 401 });
     }
+    const userId = user.id;
 
-    const rateLimit = await checkRateLimit(session.user.id, "chat");
+    const rateLimit = await checkRateLimit(userId, "chat");
     if (!rateLimit.allowed) {
       logWarn("rate_limit_exceeded", {
-        userId: session.user.id,
+        userId: userId,
         endpoint: "chat",
         remaining: rateLimit.remaining,
         resetIn: rateLimit.resetIn,
@@ -91,21 +93,24 @@ export async function POST(req: Request) {
       return new Response("Too many chat requests. Please try again later.", { status: 429 });
     }
 
-    const body = (await req.json()) as { messages?: UIMessage[] };
-    const validated = chatRequestSchema.safeParse(body);
-    if (!validated.success) {
+    const body = (await req.json()) as any;
+    console.log("Incoming chat payload:", JSON.stringify(body));
+
+    const messages = Array.isArray(body) ? body : body?.messages;
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response("No chat messages were provided.", { status: 400 });
     }
 
-    const financialContext = await buildFinancialContext(session.user.id);
+    const financialContext = await buildFinancialContext(userId);
 
-    const uiMessagesWithoutIds = validated.data.messages.map((message) => {
+    const uiMessagesWithoutIds = messages.map((message: any) => {
       const { id, ...messageWithoutId } = message;
       return messageWithoutId;
     });
     const modelMessages = await convertToModelMessages(
       uiMessagesWithoutIds as unknown as Omit<UIMessage, "id">[]
     );
+
 
     const systemPrompt = `
 You are Amortix, an advanced AI financial advisor specializing in debt management and repayment strategies.

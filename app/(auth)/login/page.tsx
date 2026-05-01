@@ -35,7 +35,7 @@ async function LoginFormWrapper({
   const params = await searchParams;
   const safeCallbackUrl = isValidCallbackUrl(params.callbackUrl)
     ? params.callbackUrl
-    : "/";
+    : "/dashboard";
 
   return (
     <LoginForm

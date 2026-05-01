@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import SessionProvider from "@/components/providers/SessionProvider";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -44,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full" data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col antialiased">
-        <SessionProvider>{children}</SessionProvider>
+        {children}
       </body>
     </html>
   );

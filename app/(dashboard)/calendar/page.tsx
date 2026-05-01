@@ -1,7 +1,7 @@
 import LoanCalendar from "@/components/loans/LoanCalendar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CalendarDays } from "lucide-react";
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 import { redirect } from "next/navigation";
@@ -14,14 +14,15 @@ export const metadata = {
 
 export default async function CalendarPage() {
 
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session?.user?.id) {
+  if (!user) {
     redirect("/login");
   }
 
   const loans = await prisma.loan.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     include: {
       payments: true,
     },
