@@ -12,6 +12,7 @@ export const prisma =
       max: 1, // Restrict connection pool to exactly 1 connection per serverless function instance to prevent exhaustion on Supabase
       connectionTimeoutMillis: 10000, // Timeout after 10 seconds of trying to connect
       idleTimeoutMillis: 10000, // Close idle connections after 10 seconds to free them up
+      ssl: { rejectUnauthorized: false }, // Prevent 'self-signed certificate in certificate chain' error
     }),
   });
 
