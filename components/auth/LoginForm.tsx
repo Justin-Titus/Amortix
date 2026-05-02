@@ -115,7 +115,7 @@ export default function LoginForm({
                   type="email"
                   autoComplete="email"
                   {...register("email")}
-                  className="w-full h-13 rounded-2xl border border-white/70 bg-white/80 pl-10 pr-4 text-sm text-[var(--color-navy)] placeholder:text-slate-400 outline-none transition-all focus:border-amortix-emerald focus:ring-4 focus:ring-amortix-emerald/10"
+                  className="w-full h-13 rounded-2xl border border-amortix-border-mid bg-white/80 pl-10 pr-4 text-sm text-[var(--color-navy)] placeholder:text-slate-400 outline-none transition-all focus:border-amortix-emerald focus:ring-4 focus:ring-amortix-emerald/10"
                   placeholder="you@amortix.app"
                 />
               </div>
@@ -148,7 +148,7 @@ export default function LoginForm({
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   {...register("password")}
-                  className="w-full h-13 rounded-2xl border border-white/70 bg-white/80 pl-10 pr-12 text-sm text-[var(--color-navy)] placeholder:text-slate-400 outline-none transition-all focus:border-amortix-emerald focus:ring-4 focus:ring-amortix-emerald/10"
+                  className="w-full h-13 rounded-2xl border border-amortix-border-mid bg-white/80 pl-10 pr-12 text-sm text-[var(--color-navy)] placeholder:text-slate-400 outline-none transition-all focus:border-amortix-emerald focus:ring-4 focus:ring-amortix-emerald/10"
                   placeholder="••••••••"
                 />
                 <button

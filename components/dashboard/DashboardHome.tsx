@@ -170,7 +170,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       <PageHero
         badge={{ icon: Sparkles, label: "Portfolio overview" }}
         title="Dashboard"
-        description={`${greeting}, ${firstName}. Your workspace is tuned for ${getMonthYear(new Date())} with a consistent card-based layout across the app.`}
+        description={`${greeting}, ${firstName}. Your workspace is optimized with smart tools for efficient loan payoff and debt reduction.`}
         stats={heroStats}
         actions={
           <>
