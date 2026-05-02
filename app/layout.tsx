@@ -34,6 +34,9 @@ export const metadata: Metadata = {
     siteName: "Amortix",
     images: ["/Amortix.png"],
   },
+  verification: {
+    google: "vHuZEzo-WWZ_EvtN9QbIC18FZpbpv398in2TkEjSp8I",
+  },
   metadataBase: new URL(env.APP_URL),
 };
 
