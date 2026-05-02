@@ -21,6 +21,7 @@ export default function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -30,7 +31,6 @@ export default function LoginForm({
     resolver: zodResolver(loginSchema),
   });
 
-  const router = useRouter();
   const supabase = createClient();
 
   const onSubmit = async (data: LoginInput) => {
@@ -48,7 +48,7 @@ export default function LoginForm({
         return;
       }
 
-      window.location.href = callbackUrl || "/dashboard";
+      router.replace(callbackUrl || "/dashboard");
     } catch (error) {
       const message =
         error instanceof Error
