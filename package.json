@@ -20,6 +20,8 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.49.1",
     "@tanstack/react-query": "^5.100.3",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "ai": "^6.0.168",
     "dotenv": "^17.4.2",
     "flowbite-datepicker": "^2.0.0",

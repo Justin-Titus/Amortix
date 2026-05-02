@@ -3,7 +3,7 @@ import { PageBadge } from "@/components/ui/PageBadge";
 import GlossaryList from "@/components/glossary/GlossaryList";
 
 export const metadata = {
-  title: "Glossary | Amortix",
+  title: "Glossary ",
   description: "Understand key loan, repayment, and risk terms used across Amortix.",
 };
 

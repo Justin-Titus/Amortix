@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { env } from "@/lib/env";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,6 +20,7 @@ export const metadata: Metadata = {
     "financial planning",
     "avalanche strategy",
     "snowball strategy",
+    "financial freedom",
   ],
   icons: {
     icon: "/Amortix.png",
@@ -34,7 +37,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(env.APP_URL),
 };
 
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,6 +46,8 @@ export default function RootLayout({
     <html lang="en" className="h-full" data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col antialiased">
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 
 export const metadata = {
-  title: "Live Analysis | Amortix",
+  title: "Live Analysis",
   description: "Model debt repayment strategies in real time using your current loans.",
 };
 

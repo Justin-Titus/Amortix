@@ -4,7 +4,7 @@ import { ShieldCheck, ArrowLeft } from "lucide-react";
 import SignOutAction from "@/components/auth/SignOutAction";
 
 export const metadata = {
-  title: "Sign out | Amortix",
+  title: "Sign out ",
   description: "Confirm sign out and safely end your Amortix session.",
 };
 

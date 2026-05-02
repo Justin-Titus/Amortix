@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 
 
 export const metadata = {
-  title: "EMI Calendar | Amortix",
+  title: "EMI Calendar ",
   description: "Track upcoming EMI due dates and monthly cashflow obligations.",
 };
 

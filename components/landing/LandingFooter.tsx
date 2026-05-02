@@ -18,14 +18,11 @@ export default function LandingFooter() {
         </div>
 
         <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-4 text-xs tracking-[0.18em] text-amortix-slate">
-          <Link href="#features" className="hover:text-amortix-navy">
-            Loan comparison
+          <Link href="/privacy" className="hover:text-amortix-navy">
+            Privacy policy
           </Link>
-          <Link href="#calculator" className="hover:text-amortix-navy">
-            See your savings
-          </Link>
-          <Link href="/register" className="hover:text-amortix-navy">
-            Get started free
+          <Link href="/terms" className="hover:text-amortix-navy">
+            Terms of service
           </Link>
         </nav>
 

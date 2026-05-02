@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
 
 export const metadata = {
-  title: "AI Advisor | Amortix",
+  title: "AI Advisor ",
   description: "Chat with Amortix AI to get personalized repayment advice.",
 };
 

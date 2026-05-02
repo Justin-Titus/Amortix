@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = {
-  title: "Dashboard | Amortix",
+  title: "Dashboard ",
   description: "View your loan portfolio health, repayment progress, and monthly debt metrics.",
 };
 

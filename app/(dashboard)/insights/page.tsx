@@ -16,7 +16,7 @@ import { LeakDetector } from "@/components/insights/LeakDetector";
 import { Card } from "@/components/ui/Card";
 
 export const metadata = {
-  title: "Insights | Amortix",
+  title: "Insights ",
   description: "See your portfolio risk, interest leak hotspots, and the highest-priority actions.",
 };
 

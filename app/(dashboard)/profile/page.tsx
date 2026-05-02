@@ -9,7 +9,7 @@ const UNAUTHORIZED_TEXT = "Unauthorized";
 const DB_UNAVAILABLE_TEXT = "DatabaseUnavailable";
 
 export const metadata = {
-  title: "Profile | Amortix",
+  title: "Profile ",
   description: "Manage your profile, financial details, and preferences.",
 };
 

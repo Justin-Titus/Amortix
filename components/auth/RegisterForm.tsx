@@ -332,6 +332,17 @@ export default function RegisterForm() {
           </button>
         </form>
 
+        <p className="text-center text-xs text-[var(--color-slate)] mt-4">
+          By signing up, you agree to our{" "}
+          <Link href="/terms" className="text-[var(--color-emerald)] hover:underline">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="text-[var(--color-emerald)] hover:underline">
+            Privacy Policy
+          </Link>.
+        </p>
+
         <p className="text-center text-sm text-[var(--color-slate)] mt-6">
           Already have an account?{" "}
           <Link

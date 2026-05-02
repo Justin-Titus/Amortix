@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 
 export const metadata = {
-  title: "Repayment Strategy | Amortix",
+  title: "Repayment Strategy ",
   description: "Optimize your debt repayment with AI-driven strategies.",
 };
 

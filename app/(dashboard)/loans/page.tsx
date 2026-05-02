@@ -7,7 +7,7 @@ import { MetricCard } from "@/components/ui/MetricCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export const metadata = {
-  title: "My Loans | Amortix",
+  title: "My Loans ",
   description: "Review active loans, balances, rates, and monthly EMI obligations.",
 };
 
