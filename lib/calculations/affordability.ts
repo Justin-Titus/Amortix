@@ -30,6 +30,12 @@ export interface AffordabilityResult {
   breakdown: ScoreBreakdown[];
 }
 
+export function getAffordabilityZoneLabel(score: number): string {
+  if (score >= 75) return "Healthy zone";
+  if (score >= 50) return "Watch zone";
+  return "Risk zone";
+}
+
 export function calculateAffordabilityScore(
   input: AffordabilityInput
 ): AffordabilityResult {

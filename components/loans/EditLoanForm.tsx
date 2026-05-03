@@ -17,7 +17,19 @@ type LoanFormValues = Omit<LoanInput, "startDate" | "nextEmiDate"> & {
 
 type EditLoanFormProps = {
   loanId: string;
-  initialData: any;
+  initialData: {
+    name: string;
+    loanType: LoanInput["loanType"];
+    principal: number;
+    outstandingBalance: number;
+    interestRate: number;
+    rateType: LoanInput["rateType"];
+    tenureMonths: number;
+    emiAmount: number;
+    startDate: Date | string;
+    lender?: string | null;
+    notes?: string | null;
+  };
   onSuccess?: () => void;
 };
 

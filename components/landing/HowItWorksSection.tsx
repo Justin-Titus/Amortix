@@ -44,7 +44,7 @@ export default function HowItWorksSection() {
 
         <motion.ol initial={shouldReduceMotion ? false : "hidden"} whileInView={shouldReduceMotion ? undefined : "visible"} viewport={{ once: true, amount: 0.2 }} variants={fadeUpStagger} className="relative mt-12 grid gap-6 lg:grid-cols-3 list-none">
           <div className="pointer-events-none absolute inset-x-0 top-10 hidden h-px bg-slate-200 lg:block" />
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <motion.li key={step.number} variants={fadeUp} className="relative list-none">
               <StepCard
                 number={step.number}

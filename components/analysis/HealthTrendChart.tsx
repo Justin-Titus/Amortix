@@ -32,14 +32,6 @@ function formatMonthLabel(dateText: string): string {
   });
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 function monthsForRange(range: RangeKey): number {
   if (range === "3M") return 3;
   if (range === "6M") return 6;

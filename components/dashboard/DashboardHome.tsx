@@ -13,10 +13,10 @@ import LoanProgressBar from "@/components/dashboard/LoanProgressBar";
 import AIInsightCard from "@/components/dashboard/AIInsightCard";
 import HealthTrendChart, { type HealthSnapshotPoint } from "@/components/analysis/HealthTrendChart";
 import InterestLeakDetector from "@/components/analysis/InterestLeakDetector";
-import type { FinancialProfileInput } from "@/lib/analysis/interest-leak";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { calculateAffordabilityScore, getAffordabilityZoneLabel } from "@/lib/calculations/affordability";
 
 type Loan = {
   id: string;
@@ -33,7 +33,13 @@ type Loan = {
 type DashboardHomeProps = {
   loans: Loan[];
   userName: string;
-  profile: FinancialProfileInput | null;
+  profile: {
+    monthlyIncome?: number | null;
+    monthlyExpenses?: number | null;
+    creditScoreRange?: string | null;
+    hasEmergencyFund?: boolean | null;
+    emergencyFundMonths?: number | null;
+  } | null;
   snapshots: HealthSnapshotPoint[];
 };
 
@@ -54,13 +60,7 @@ function scoreColor(score: number): "default" | "emerald" | "amber" | "red" {
 }
 
 function scoreZoneLabel(score: number): string {
-  if (score >= 75) return "Healthy repayment zone";
-  if (score >= 50) return "Watch your monthly load";
-  return "Action needed this cycle";
-}
-
-function getMonthYear(date: Date) {
-  return date.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  return getAffordabilityZoneLabel(score);
 }
 
 export default function DashboardHome({ loans, userName, profile, snapshots }: DashboardHomeProps) {
@@ -75,10 +75,42 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       : 0;
 
   const paidPercent = totalPrincipal > 0 ? ((totalPrincipal - totalOutstanding) / totalPrincipal) * 100 : 0;
-  const rateScore = Math.max(0, 100 - avgRate * 4);
-  const computedHealthScore = loans.length > 0 ? Math.round(rateScore * 0.7 + paidPercent * 0.3) : 100;
-  const healthScore = Math.max(0, Math.min(100, computedHealthScore));
+  const affordability = useMemo(() => {
+    if (
+      !profile?.monthlyIncome ||
+      profile.monthlyIncome <= 0 ||
+      profile.monthlyExpenses === undefined ||
+      profile.monthlyExpenses === null
+    ) {
+      return null;
+    }
+
+    return calculateAffordabilityScore({
+      monthlyIncome: profile.monthlyIncome,
+      monthlyExpenses: profile.monthlyExpenses,
+      totalMonthlyEMI: totalEMI,
+      creditScoreRange: profile.creditScoreRange ?? "Not provided",
+      hasEmergencyFund: Boolean(profile.hasEmergencyFund),
+      emergencyFundMonths: profile.emergencyFundMonths ?? 0,
+      loans: loans.map((loan) => ({
+        annualRate: loan.interestRate,
+        tenureMonths: loan.tenureMonths,
+        rateType: loan.rateType,
+      })),
+    });
+  }, [loans, profile, totalEMI]);
+
+  const affordabilityScore = affordability?.score ?? null;
   const hasLoans = loans.length > 0;
+  const hasAffordability = affordabilityScore !== null;
+  const leakProfile = profile && profile.monthlyIncome != null && profile.monthlyExpenses != null
+    ? {
+        monthlyIncome: profile.monthlyIncome,
+        monthlyExpenses: profile.monthlyExpenses,
+        hasEmergencyFund: Boolean(profile.hasEmergencyFund),
+        emergencyFundMonths: profile.emergencyFundMonths ?? 0,
+      }
+    : null;
 
   const projectedMonths = totalEMI > 0 ? Math.max(1, Math.ceil(totalOutstanding / totalEMI)) : 0;
   const debtFreeDate =
@@ -161,7 +193,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
   const heroStats = [
     { label: "Open loans", value: String(loans.length), muted: !hasLoans },
     { label: "Total outstanding", value: formatCompactCurrency(totalOutstanding), muted: !hasLoans },
-    { label: "Health score", value: `${healthScore}/100`, muted: !hasLoans, color: healthScore >= 70 ? "text-emerald-500" : healthScore >= 40 ? "text-amber-500" : "text-red-500" },
+    { label: "Affordability score", value: hasAffordability ? `${affordabilityScore}/100` : "-", muted: !hasAffordability, color: hasAffordability && affordabilityScore !== null ? affordabilityScore >= 70 ? "text-emerald-500" : affordabilityScore >= 40 ? "text-amber-500" : "text-red-500" : "text-slate-400" },
     { label: "Monthly snapshots", value: String(snapshotCount), muted: snapshotCount === 0 },
   ];
 
@@ -223,11 +255,11 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
           isEmpty={!hasLoans}
         />
         <MetricCard
-          label="Health score"
-          value={hasLoans ? `${healthScore}/100` : "-"}
-          description={hasLoans ? scoreZoneLabel(healthScore) : "Add loans to see this"}
-          valueColor={hasLoans ? scoreColor(healthScore) : "muted"}
-          isEmpty={!hasLoans}
+          label="Affordability score"
+          value={hasAffordability && affordabilityScore !== null ? `${affordabilityScore}/100` : "-"}
+          description={hasAffordability && affordabilityScore !== null ? scoreZoneLabel(affordabilityScore) : "Add profile data to see this"}
+          valueColor={hasAffordability && affordabilityScore !== null ? scoreColor(affordabilityScore) : "muted"}
+          isEmpty={!hasAffordability}
         />
         <MetricCard
           label="Debt-free by"
@@ -331,7 +363,13 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
                 <h2 className="text-[13px] font-medium text-amortix-navy">Affordability score</h2>
                 <p className="text-[11px] text-amortix-slate">A quick read on repayment sustainability.</p>
               </div>
-              <AffordabilityGauge score={healthScore} />
+              {hasAffordability && affordabilityScore !== null ? (
+                <AffordabilityGauge score={affordabilityScore} />
+              ) : (
+                <div className="rounded-xl border border-dashed border-amortix-border-mid bg-amortix-frost px-4 py-8 text-center text-xs text-amortix-slate">
+                  Add profile data to calculate an affordability score.
+                </div>
+              )}
 
               <div className="mt-2 divide-y divide-slate-100">
                 <div className="flex items-center justify-between py-2">
@@ -352,7 +390,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-[11px] text-amortix-slate">Risk signal</span>
-                  <span className={`num text-[11px] font-medium ${healthScore >= 70 ? "text-amortix-emerald" : "text-amortix-red"}`}>{healthScore >= 70 ? "Stable" : "Monitor"}</span>
+                  <span className={`num text-[11px] font-medium ${hasAffordability && affordabilityScore !== null && affordabilityScore >= 70 ? "text-amortix-emerald" : "text-amortix-red"}`}>{hasAffordability && affordabilityScore !== null && affordabilityScore >= 70 ? "Stable" : "Monitor"}</span>
                 </div>
               </div>
             </motion.div>
@@ -369,7 +407,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
                   outstandingBalance: loan.outstandingBalance,
                   emiAmount: loan.emiAmount,
                 }))}
-                profile={profile}
+                profile={leakProfile}
               />
             </motion.div>
 

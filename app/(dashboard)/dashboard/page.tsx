@@ -49,6 +49,7 @@ export default async function DashboardPage() {
       ? {
           monthlyIncome: profile.monthlyIncome,
           monthlyExpenses: profile.monthlyExpenses,
+          creditScoreRange: profile.creditScoreRange,
           hasEmergencyFund: Boolean(profile.hasEmergencyFund),
           emergencyFundMonths: profile.emergencyFundMonths ?? 0,
         }

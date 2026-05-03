@@ -3,7 +3,7 @@ import { streamAIChat } from "@/lib/ai";
 import { formatCurrency } from "@/lib/calculations/emi";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { logWarn, reportError } from "@/lib/logger";
+import { logInfo, logWarn, reportError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { chatRequestSchema } from "@/lib/validations/chat.schema";
 
@@ -93,20 +93,49 @@ export async function POST(req: Request) {
       return new Response("Too many chat requests. Please try again later.", { status: 429 });
     }
 
-    const body = (await req.json()) as any;
-    console.log("Incoming chat payload:", JSON.stringify(body));
+    const rawBody: unknown = await req.json();
 
-    const messages = Array.isArray(body) ? body : body?.messages;
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return new Response("No chat messages were provided.", { status: 400 });
+    // Redact or summarize incoming payload for safe logging (never log user message content)
+    const redactChatPayload = (body: unknown) => {
+      try {
+        if (Array.isArray(body)) {
+          return { messages: body.map((m) => ({ role: (m as any).role, hasContent: !!(m as any).content })) };
+        }
+        if (body && typeof body === "object") {
+          const b: any = body as any;
+          return { messages: b.messages ? b.messages.map((m: any) => ({ role: m.role, hasContent: !!m.content })) : undefined };
+        }
+        return {};
+      } catch (e) {
+        return {};
+      }
+    };
+
+    // Log non-sensitive metadata about the request
+    logInfo("incoming_chat_payload", { userId, meta: redactChatPayload(rawBody) });
+
+    // Use safeParse to avoid Zod throwing and returning a 500
+    const safeParseResult = Array.isArray(rawBody)
+      ? chatRequestSchema.safeParse({ messages: rawBody })
+      : chatRequestSchema.safeParse(rawBody);
+
+    if (!safeParseResult.success) {
+      // Return 400 Bad Request with validation errors
+      return new Response(JSON.stringify({ errors: safeParseResult.error.issues }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
+
+    const parsedBody = safeParseResult.data;
+    const messages = parsedBody.messages;
 
     const financialContext = await buildFinancialContext(userId);
 
-    const uiMessagesWithoutIds = messages.map((message: any) => {
-      const { id, ...messageWithoutId } = message;
-      return messageWithoutId;
-    });
+    const uiMessagesWithoutIds = messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
     const modelMessages = await convertToModelMessages(
       uiMessagesWithoutIds as unknown as Omit<UIMessage, "id">[]
     );

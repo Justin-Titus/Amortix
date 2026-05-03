@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resetPasswordSchema } from "@/lib/validations/auth.schema";
 import { resetPassword } from "@/app/actions/auth";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 

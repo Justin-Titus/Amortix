@@ -78,13 +78,12 @@ export async function captureMonthlySnapshot(userId: string): Promise<void> {
       },
     });
   } catch (error: unknown) {
-    if (
-      error instanceof Error &&
-      "code" in error &&
-      (error as any).code === "P2002"
-    ) {
-      // A snapshot for this user/month already exists; ignore duplicate creation.
-      return;
+    if (error instanceof Error && "code" in error) {
+      const knownError = error as Error & { code?: string };
+      if (knownError.code === "P2002") {
+        // A snapshot for this user/month already exists; ignore duplicate creation.
+        return;
+      }
     }
     reportError(error, { flow: "captureMonthlySnapshot", userId });
   }

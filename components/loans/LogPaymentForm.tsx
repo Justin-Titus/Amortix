@@ -4,15 +4,14 @@ import { useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { recordPayment } from "@/app/actions/loan";
 import { Card } from "@/components/ui/Card";
-import { formatCurrency } from "@/lib/calculations/emi";
 
 type LogPaymentFormProps = {
   loanId: string;
   defaultAmount: number;
-  loanName: string;
+  loanName?: string;
 };
 
-export default function LogPaymentForm({ loanId, defaultAmount, loanName }: LogPaymentFormProps) {
+export default function LogPaymentForm({ loanId, defaultAmount }: LogPaymentFormProps) {
   const [amount, setAmount] = useState(defaultAmount);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [type, setType] = useState<"EMI" | "PREPAYMENT">("EMI");

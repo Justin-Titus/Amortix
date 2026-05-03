@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck, Loader2, Menu, UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import {
   getUserNotifications,
   markAllNotificationsAsRead,
@@ -42,11 +43,11 @@ const pageContextMap: Record<string, string> = {
 };
 
 export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: DashboardHeaderProps) {
-  const [user, setUser] = useState<any>(null);
-  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
   
   useEffect(() => {
     const getUser = async () => {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
     };
@@ -82,10 +83,6 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
       setLoadingNotifications(false);
     }
   };
-
-  useEffect(() => {
-    void loadNotifications();
-  }, []);
 
   useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
@@ -203,7 +200,7 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
                   </div>
                 ) : notifications.length === 0 ? (
                   <div className="px-3 py-8 text-center text-xs text-amortix-slate">
-                    You're all caught up.
+                    You&apos;re all caught up.
                   </div>
                 ) : (
                   notifications.map((notification) => (

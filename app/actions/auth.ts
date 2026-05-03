@@ -3,11 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 
 import { prisma } from "@/lib/prisma";
-import { logInfo, reportError } from "@/lib/logger";
+import { logInfo } from "@/lib/logger";
 import { withServerAction } from "@/lib/server-action-wrapper";
-import {
-  registerSchema,
-} from "@/lib/validations/auth.schema";
 
 /**
  * Creates a record in the Prisma User table for a user that just signed up via Supabase.

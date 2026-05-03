@@ -1,4 +1,3 @@
-import { getLoan } from "@/app/actions/loan";
 import { notFound } from "next/navigation";
 import { formatCurrency } from "@/lib/calculations/emi";
 import LoanActions from "@/components/loans/LoanActions";
@@ -12,7 +11,6 @@ import PrepaymentSimulator from "@/components/analysis/PrepaymentSimulator";
 import { loanHealthScore } from "@/lib/analysis/loan-health";
 import type { FinancialProfileInput } from "@/lib/validations/profile.schema";
 import LogPaymentForm from "@/components/loans/LogPaymentForm";
-import { Card } from "@/components/ui/Card";
 
 function differenceInMonths(from: Date, to: Date): number {
   const yearDiff = to.getFullYear() - from.getFullYear();
@@ -41,8 +39,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
     notFound();
   }
 
-  // Use a typed reference to ensure TS recognizes the included payments
-  const loan = loanData as typeof loanData & { payments: any[] };
+  const loan = loanData;
 
   let profile = null;
   let userLoans: Array<{
@@ -202,7 +199,6 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
           <div className="space-y-3">
             <h2 className="text-sm font-medium uppercase tracking-wider text-amortix-slate">Prepayment Impact Simulator</h2>
             <PrepaymentSimulator
-              principal={loan.principal}
               outstandingBalance={loan.outstandingBalance}
               interestRate={loan.interestRate}
               tenureMonths={loan.tenureMonths}
@@ -231,7 +227,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-amortix-border-light">
-                    {loan.payments.map((payment: any) => (
+                    {loan.payments.map((payment) => (
                       <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 text-amortix-slate">
                           {new Date(payment.paymentDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}

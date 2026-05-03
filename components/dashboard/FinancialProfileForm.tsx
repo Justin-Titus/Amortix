@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Check, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { updateUserSettings } from "@/app/actions/settings";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 

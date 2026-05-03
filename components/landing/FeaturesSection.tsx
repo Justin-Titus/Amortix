@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { BarChart3, Bot, FileDown, ShieldCheck, Sparkles } from "lucide-react";
+import { BarChart3, Bot, FileDown, ShieldCheck } from "lucide-react";
 import FeatureCard from "@/components/ui/FeatureCard";
 import { fadeUp, fadeUpStagger } from "@/lib/animations";
 
@@ -77,7 +77,7 @@ export default function FeaturesSection() {
             </div>
           </motion.li>
 
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <motion.li key={feature.title} variants={fadeUp} role="listitem">
               <FeatureCard
                 Icon={feature.icon}

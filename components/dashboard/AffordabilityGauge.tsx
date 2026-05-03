@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { getAffordabilityZoneLabel } from "@/lib/calculations/affordability";
 
 type AffordabilityGaugeProps = {
   score: number;
@@ -10,12 +11,6 @@ function getGaugeColor(score: number) {
   if (score >= 75) return "#059669";
   if (score >= 50) return "#F59E0B";
   return "#DC2626";
-}
-
-function getZone(score: number) {
-  if (score >= 75) return "Healthy zone";
-  if (score >= 50) return "Watch zone";
-  return "Risk zone";
 }
 
 export default function AffordabilityGauge({ score }: AffordabilityGaugeProps) {
@@ -28,8 +23,10 @@ export default function AffordabilityGauge({ score }: AffordabilityGaugeProps) {
   const circumference = Math.PI * radius;
   const progress = circumference * (1 - safeScore / 100);
 
+  const zoneLabel = getAffordabilityZoneLabel(safeScore);
+
   return (
-    <div className="mx-auto w-40" role="img" aria-label={`Affordability score: ${safeScore}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={safeScore}>
+    <div className="mx-auto w-40" role="img" aria-label={`Affordability score: ${safeScore}, ${zoneLabel}`}>
       <svg width="160" height="90" viewBox="0 0 160 90" role="img" aria-hidden="true">
         <path
           d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
@@ -54,7 +51,7 @@ export default function AffordabilityGauge({ score }: AffordabilityGaugeProps) {
 
       <div className="-mt-9 text-center">
         <p className="num text-2xl font-medium text-amortix-navy">{safeScore}</p>
-        <p className="text-xs text-amortix-slate">{getZone(safeScore)}</p>
+        <p className="text-xs text-amortix-slate">{zoneLabel}</p>
       </div>
     </div>
   );

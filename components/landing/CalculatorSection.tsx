@@ -24,15 +24,9 @@ export default function CalculatorSection() {
   const totalAmount = emi * tenure;
   const principalShare = (principal / totalAmount) * 100;
   const interestShare = (interest / totalAmount) * 100;
-  const benchmarkRate = Math.max(0.5, rate - 1);
-  const benchmarkEmi = useMemo(() => calculateEMI(principal, benchmarkRate, tenure), [principal, benchmarkRate, tenure]);
 
   const baseSchedule = useMemo(() => generateAmortizationSchedule(principal, rate, tenure), [principal, rate, tenure]);
   const acceleratedSchedule = useMemo(() => generateAmortizationSchedule(principal, rate, tenure, 5000), [principal, rate, tenure]);
-  const baseInterest = useMemo(() => baseSchedule.reduce((sum, month) => sum + month.interestComponent, 0), [baseSchedule]);
-  const acceleratedInterest = useMemo(() => acceleratedSchedule.reduce((sum, month) => sum + month.interestComponent, 0), [acceleratedSchedule]);
-  const monthsSaved = Math.max(0, baseSchedule.length - acceleratedSchedule.length);
-  const interestSaved = Math.max(0, baseInterest - acceleratedInterest);
   const optimizedOutflow = emi + 5000;
   const principalShareWidth = `${principalShare.toFixed(2)}%`;
   const interestShareWidth = `${interestShare.toFixed(2)}%`;

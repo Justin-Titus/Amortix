@@ -78,7 +78,7 @@ export default function StatsBand() {
         </div>
 
         <motion.ul initial={shouldReduceMotion ? false : "hidden"} whileInView={shouldReduceMotion ? undefined : "visible"} viewport={{ once: true, amount: 0.2 }} variants={fadeUpStagger} className="mt-12 grid gap-6 md:grid-cols-3 list-none" role="list">
-          {stats.map((item, index) => {
+          {stats.map((item) => {
             const Icon = item.icon;
             return (
               <motion.li key={item.label} variants={fadeUp} className="rounded-4xl border border-white/70 bg-white p-8 shadow-[0_20px_50px_rgba(15,27,45,0.06)]" role="listitem">

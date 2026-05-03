@@ -51,13 +51,11 @@ function estimateRemainingMonths(outstanding: number, annualRate: number, emi: n
 type TabKey = "lump" | "monthly" | "hybrid";
 
 export default function PrepaymentSimulator({
-  principal,
   outstandingBalance,
   interestRate,
   tenureMonths,
   emiAmount,
 }: {
-  principal: number;
   outstandingBalance: number;
   interestRate: number;
   tenureMonths: number;

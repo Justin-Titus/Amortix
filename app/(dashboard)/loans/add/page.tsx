@@ -48,7 +48,7 @@ export default function AddLoanPage() {
             <ul className="space-y-3 text-xs text-[var(--color-slate)]">
               <li className="flex gap-2">
                 <span className="text-[var(--color-emerald)]">•</span>
-                <span>You can usually find your exact <strong>outstanding balance</strong> on your lender's mobile app or last statement.</span>
+                <span>You can usually find your exact <strong>outstanding balance</strong> on your lender&apos;s mobile app or last statement.</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-[var(--color-emerald)]">•</span>

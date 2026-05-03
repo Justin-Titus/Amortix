@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarDays, Info } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -35,10 +35,6 @@ function formatMonthKey(date: Date) {
   return `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}`;
 }
 
-function formatMonthLabel(date: Date) {
-  return date.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
-}
-
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
 }
@@ -61,10 +57,6 @@ export default function LoanCalendar({ loans, initialMonth }: LoanCalendarProps)
   const firstDayOfWeek = new Date(year, month, 1).getDay();
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  useEffect(() => {
-    setSelectedDate(null);
-  }, [currentMonth]);
 
   const selectedDay = selectedDate ? days[selectedDate] ?? null : null;
 
@@ -93,10 +85,13 @@ export default function LoanCalendar({ loans, initialMonth }: LoanCalendarProps)
 
       <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
         <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden">
-          <CalendarControls
-            initialMonth={formatMonthKey(currentMonth)}
-            onChange={(newMonth) => setCurrentMonth(parseYearMonth(newMonth))}
-          />
+            <CalendarControls
+              initialMonth={formatMonthKey(currentMonth)}
+              onChange={(newMonth) => {
+                setCurrentMonth(parseYearMonth(newMonth));
+                setSelectedDate(null);
+              }}
+            />
 
           <div className="grid grid-cols-7 border-b border-slate-100">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (

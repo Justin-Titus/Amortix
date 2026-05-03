@@ -493,7 +493,7 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
                 <h2 className="text-[13px] font-medium text-amortix-navy">Live insight</h2>
               </div>
 
-              <div className="rounded-xl bg-amortix-navy-deep p-4 text-white">
+              <div className="rounded-xl bg-amortix-navy p-4 text-white">
                 <p className="text-[11px] tracking-[0.18em] text-slate-400 font-medium">What the model says</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">{summary}</p>
               </div>

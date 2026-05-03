@@ -7,9 +7,62 @@ export default function OAuthButtons({ callbackUrl }: { callbackUrl?: string }) 
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   const supabase = createClient();
 
-  const handleOAuth = async (provider: any) => {
+  // Generate a cryptographically secure nonce for OAuth flows
+  const generateSecureNonce = (length = 16) => {
+    const arr = new Uint8Array(length);
+    if (typeof window !== "undefined" && window.crypto && window.crypto.getRandomValues) {
+      window.crypto.getRandomValues(arr);
+    } else {
+      // Fallback: use Math.random for non-browser or older environments (very unlikely in client component)
+      for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+    }
+    return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
+  };
+
+  const handleOAuth = async (provider: "google") => {
     setLoadingProvider(provider);
     try {
+      if (provider === "google") {
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        if (!clientId || clientId === "YOUR_GOOGLE_CLIENT_ID_HERE") {
+          alert("Please configure NEXT_PUBLIC_GOOGLE_CLIENT_ID in your .env file.");
+          return;
+        }
+
+        const redirectUri = `${window.location.origin}/auth/callback/google`;
+        const rawNonce = generateSecureNonce(16);
+        
+        // Hash rawNonce with SHA-256
+        const encoder = new TextEncoder();
+        const data = encoder.encode(rawNonce);
+        const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashedNonce = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+        // Use sessionStorage to pass raw nonce and next target URL safely
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("google_oauth_nonce", rawNonce);
+          sessionStorage.setItem("google_oauth_next", callbackUrl || "/dashboard");
+        }
+
+        const state = callbackUrl ? encodeURIComponent(callbackUrl) : "";
+
+        // Standard Google OAuth 2.0 endpoint for client-side ID Token Implicit Flow
+        const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+          clientId
+        )}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${hashedNonce}${
+          state ? `&state=${state}` : ""
+        }`;
+
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("Constructed Redirect URI:", redirectUri);
+          console.debug("Full Google Auth URL:", googleAuthUrl);
+        }
+
+        window.location.href = googleAuthUrl;
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
