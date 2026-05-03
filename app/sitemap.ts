@@ -3,7 +3,7 @@ import { env } from "@/lib/env";
 
 const publicRoutes = ["", "/privacy", "/terms"];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const base = env.APP_URL.replace(/\/+$/g, "");
 
