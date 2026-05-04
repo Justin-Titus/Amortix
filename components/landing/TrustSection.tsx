@@ -1,8 +1,4 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
 import { ShieldCheck, Lock, Sparkles } from "lucide-react";
-import { fadeUp } from "@/lib/animations";
 
 const trustItems = [
   {
@@ -20,12 +16,10 @@ const trustItems = [
 ];
 
 export default function TrustSection() {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
-    <section className="bg-slate-50 py-20 border-y border-amortix-border-light">
+    <section className="bg-slate-50 py-20 border-y border-amortix-border-light animate-fade-up">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <motion.div initial={shouldReduceMotion ? false : "hidden"} whileInView={shouldReduceMotion ? undefined : "visible"} viewport={{ once: true, amount: 0.2 }} variants={fadeUp} className="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
             <p className="section-label">Built to be trusted</p>
             <h2 className="section-heading mt-3">
@@ -49,7 +43,7 @@ export default function TrustSection() {
               );
             })}
           </ul>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

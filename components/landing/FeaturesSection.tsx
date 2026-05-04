@@ -1,9 +1,5 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
 import { BarChart3, Bot, FileDown, ShieldCheck } from "lucide-react";
 import FeatureCard from "@/components/ui/FeatureCard";
-import { fadeUp, fadeUpStagger } from "@/lib/animations";
 
 const features = [
   {
@@ -37,10 +33,8 @@ const features = [
 ];
 
 export default function FeaturesSection() {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
-    <section id="features" aria-labelledby="features-heading" className="bg-slate-50 py-20">
+    <section id="features" aria-labelledby="features-heading" className="bg-slate-50 py-20 animate-fade-up">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="max-w-3xl">
           <p className="section-label">What you get</p>
@@ -49,8 +43,8 @@ export default function FeaturesSection() {
           </h2>
         </div>
 
-        <motion.ul initial={shouldReduceMotion ? false : "hidden"} whileInView={shouldReduceMotion ? undefined : "visible"} viewport={{ once: true, amount: 0.2 }} variants={fadeUpStagger} className="mt-10 grid gap-4 lg:grid-cols-3 xl:gap-6 list-none" role="list">
-          <motion.li variants={fadeUp} className="row-span-2 rounded-4xl bg-amortix-navy p-8 text-white shadow-[0_24px_80px_rgba(15,27,45,0.12)]" role="listitem">
+        <ul className="mt-10 grid gap-4 lg:grid-cols-3 xl:gap-6 list-none" role="list">
+          <li className="row-span-2 rounded-4xl bg-amortix-navy p-8 text-white shadow-[0_24px_80px_rgba(15,27,45,0.12)]" role="listitem">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-emerald-500/15 text-emerald-200">
               <BarChart3 className="h-5 w-5" />
             </div>
@@ -75,10 +69,10 @@ export default function FeaturesSection() {
                 </div>
               ))}
             </div>
-          </motion.li>
+          </li>
 
           {features.map((feature) => (
-            <motion.li key={feature.title} variants={fadeUp} role="listitem">
+            <li key={feature.title} role="listitem">
               <FeatureCard
                 Icon={feature.icon}
                 title={feature.title}
@@ -87,9 +81,9 @@ export default function FeaturesSection() {
                 iconColor={feature.iconColor}
                 className="rounded-4xl border border-slate-200 bg-white p-8 shadow-[0_18px_40px_rgba(15,27,45,0.06)]"
               />
-            </motion.li>
+            </li>
           ))}
-        </motion.ul>
+        </ul>
       </div>
     </section>
   );

@@ -1,9 +1,5 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
 import { BarChart3, CheckCircle2, Plus } from "lucide-react";
 import StepCard from "@/components/ui/StepCard";
-import { fadeUp, fadeUpStagger } from "@/lib/animations";
 
 const steps = [
   {
@@ -30,10 +26,8 @@ const steps = [
 ];
 
 export default function HowItWorksSection() {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
-    <section id="how-it-works" aria-labelledby="how-it-works-heading" className="bg-white py-20">
+    <section id="how-it-works" aria-labelledby="how-it-works-heading" className="bg-white py-20 animate-fade-up">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="max-w-3xl">
           <p className="section-label">How it works</p>
@@ -42,10 +36,10 @@ export default function HowItWorksSection() {
           </h2>
         </div>
 
-        <motion.ol initial={shouldReduceMotion ? false : "hidden"} whileInView={shouldReduceMotion ? undefined : "visible"} viewport={{ once: true, amount: 0.2 }} variants={fadeUpStagger} className="relative mt-12 grid gap-6 lg:grid-cols-3 list-none">
+        <ol className="relative mt-12 grid gap-6 lg:grid-cols-3 list-none">
           <div className="pointer-events-none absolute inset-x-0 top-10 hidden h-px bg-slate-200 lg:block" />
           {steps.map((step) => (
-            <motion.li key={step.number} variants={fadeUp} className="relative list-none">
+            <li key={step.number} className="relative list-none">
               <StepCard
                 number={step.number}
                 title={step.title}
@@ -53,9 +47,9 @@ export default function HowItWorksSection() {
                 outcome={step.outcome}
                 Icon={step.Icon}
               />
-            </motion.li>
+            </li>
           ))}
-        </motion.ol>
+        </ol>
       </div>
     </section>
   );

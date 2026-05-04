@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PageHero } from "@/components/layout/PageHero";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { buildLoanPath } from "@/lib/loans/url";
 
 export const metadata = {
   title: "My Loans ",
@@ -108,7 +109,7 @@ export default async function LoansPage() {
               return (
                 <Link
                   key={loan.id}
-                  href={`/loans/${loan.id}`}
+                  href={buildLoanPath(loan.name, loan.id)}
                   className="group block rounded-2xl border border-[#E2E8F0] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-slate-300"
                 >
                   <div className="mb-4 flex items-start justify-between gap-4">

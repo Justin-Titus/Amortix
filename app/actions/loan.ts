@@ -6,6 +6,7 @@ import { withServerAction } from "@/lib/server-action-wrapper";
 import { loanSchema, type LoanInput } from "@/lib/validations/loan.schema";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { buildLoanPath } from "@/lib/loans/url";
 
 export type LoanRecord = {
   id: string;
@@ -176,6 +177,7 @@ export async function updateLoan(id: string, data: LoanInput) {
     revalidatePath("/dashboard");
     revalidatePath("/loans");
     revalidatePath(`/loans/${id}`);
+    revalidatePath(buildLoanPath(updatedLoan.name, updatedLoan.id));
 
     return { success: true, loan: updatedLoan };
   } catch (error) {
@@ -269,6 +271,7 @@ export async function recordPayment(loanId: string, data: z.input<typeof payment
     revalidatePath("/dashboard");
     revalidatePath("/loans");
     revalidatePath(`/loans/${loanId}`);
+    revalidatePath(buildLoanPath(loan.name, loan.id));
     revalidatePath("/calendar");
 
     return { success: true };

@@ -1,3 +1,5 @@
+import { buildLoanPath } from "@/lib/loans/url";
+
 export type LeakType =
   | "HIGH_RATE_PERSONAL_LOAN"
   | "FLOATING_RATE_RISK"
@@ -57,7 +59,7 @@ export function detectInterestLeaks(
         annualLeakAmount: annualLeak,
         fixDescription: `You are paying ${personalLoan.interestRate}% on this loan while your home loan is at ${homeLoan.interestRate}%. A home loan top-up could save you Rs ${Math.round(annualLeak).toLocaleString("en-IN")} per year.`,
         actionLabel: "See prepayment options",
-        actionRoute: `/loans/${personalLoan.id}`,
+        actionRoute: buildLoanPath(personalLoan.name, personalLoan.id),
       });
     }
   }
@@ -92,7 +94,7 @@ export function detectInterestLeaks(
         annualLeakAmount: monthlyInterest * 12 * 0.15,
         fixDescription: `${Math.round(interestRatio * 100)}% of each EMI on this loan goes to interest, only ${Math.round((1 - interestRatio) * 100)}% to principal. A Rs 10,000 prepayment now would save significantly.`,
         actionLabel: "Calculate prepayment impact",
-        actionRoute: `/loans/${loan.id}`,
+        actionRoute: buildLoanPath(loan.name, loan.id),
       });
     }
   });
@@ -114,7 +116,7 @@ export function detectInterestLeaks(
         annualLeakAmount: annualSaving,
         fixDescription: `You have ${excessMonths} months of extra emergency fund beyond the recommended 6. Using Rs ${Math.round(excessFund).toLocaleString("en-IN")} to prepay your ${highestRateLoan.interestRate}% loan could save Rs ${Math.round(annualSaving).toLocaleString("en-IN")} in interest this year.`,
         actionLabel: "Simulate prepayment",
-        actionRoute: `/loans/${highestRateLoan.id}`,
+        actionRoute: buildLoanPath(highestRateLoan.name, highestRateLoan.id),
       });
     }
   }

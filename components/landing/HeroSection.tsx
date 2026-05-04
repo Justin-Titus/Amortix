@@ -1,9 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, TrendingDown, Zap } from "lucide-react";
-import { fadeUp, staggerContainer } from "@/lib/animations";
 
 function DashboardPreview() {
   return (
@@ -74,21 +70,17 @@ function DashboardPreview() {
 }
 
 export default function HeroSection() {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
-    <section id="hero" aria-labelledby="hero-heading" className="bg-white py-20 sm:py-24">
+    <section id="hero" aria-labelledby="hero-heading" className="bg-white py-20 sm:py-24 animate-fade-up">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8">
-        <motion.div initial={shouldReduceMotion ? false : "hidden"} whileInView={shouldReduceMotion ? undefined : "visible"} viewport={{ once: true, amount: 0.2 }} variants={staggerContainer} className="max-w-2xl">
-          <motion.p variants={fadeUp} className="section-label">3 strategies · 12-month projections · AI advisor</motion.p>
-          <motion.h1 variants={fadeUp} className="hero-h1 mt-6">
-            A sharper way<br />to manage debt.
-          </motion.h1>
-          <motion.p variants={fadeUp} className="body-text mt-6 max-w-xl">
+        <div className="max-w-2xl">
+          <p className="section-label">3 strategies · 12-month projections · AI advisor</p>
+          <h1 className="hero-h1 mt-6">A sharper way<br />to manage debt.</h1>
+          <p className="body-text mt-6 max-w-xl">
             Amortix gives you a clean debt workspace: compare repayment strategies, model EMI pressure, and ask an AI advisor what to do next.
-          </motion.p>
+          </p>
 
-          <motion.div variants={fadeUp} className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/register" className="btn-primary">
               Start free
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -96,9 +88,9 @@ export default function HeroSection() {
             <a href="#calculator" className="btn-secondary">
               Try the calculator
             </a>
-          </motion.div>
+          </div>
 
-          <motion.div variants={fadeUp} className="mt-8 flex flex-col gap-4 rounded-4xl border border-slate-200/70 bg-amortix-frost p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-8 flex flex-col gap-4 rounded-4xl border border-slate-200/70 bg-amortix-frost p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2">
                 {['JT', 'AM', 'SR', 'PK'].map((initial, index) => (
@@ -114,12 +106,12 @@ export default function HeroSection() {
             <p className="text-sm text-amortix-slate">
               A calmer, cleaner debt workflow that feels precise instead of noisy.
             </p>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
-        <motion.div initial={shouldReduceMotion ? false : "hidden"} whileInView={shouldReduceMotion ? undefined : "visible"} viewport={{ once: true, amount: 0.2 }} variants={fadeUp} className="lg:justify-self-end">
+        <div className="lg:justify-self-end animate-fade-up">
           <DashboardPreview />
-        </motion.div>
+        </div>
       </div>
     </section>
   );

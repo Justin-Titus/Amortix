@@ -1,7 +1,7 @@
 import LandingNav from "@/components/landing/LandingNav";
 import HeroSection from "@/components/landing/HeroSection";
 import StatsBand from "@/components/landing/StatsBand";
-import CalculatorSection from "@/components/landing/CalculatorSection";
+import DeferredCalculator from "@/components/landing/DeferredCalculator";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import TrustSection from "@/components/landing/TrustSection";
@@ -25,7 +25,7 @@ export default async function LandingPage() {
       <main>
         <HeroSection />
         <StatsBand />
-        <CalculatorSection />
+        <DeferredCalculator />
         <FeaturesSection />
         <HowItWorksSection />
         <TrustSection />

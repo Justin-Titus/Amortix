@@ -11,6 +11,7 @@ import PrepaymentSimulator from "@/components/analysis/PrepaymentSimulator";
 import { loanHealthScore } from "@/lib/analysis/loan-health";
 import type { FinancialProfileInput } from "@/lib/validations/profile.schema";
 import LogPaymentForm from "@/components/loans/LogPaymentForm";
+import { slugifyLoanName } from "@/lib/loans/url";
 
 function differenceInMonths(from: Date, to: Date): number {
   const yearDiff = to.getFullYear() - from.getFullYear();
@@ -20,13 +21,13 @@ function differenceInMonths(from: Date, to: Date): number {
 
 export default async function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const { id } = resolvedParams;
+  const rawParam = decodeURIComponent(resolvedParams.id);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
   
   const loanData = await prisma.loan.findFirst({
-    where: { id, userId: userId },
+    where: { id: rawParam, userId: userId },
     include: {
       payments: {
         orderBy: { paymentDate: "desc" },
@@ -35,11 +36,26 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
     },
   });
 
-  if (!loanData) {
+  let resolvedLoanData = loanData;
+  if (!resolvedLoanData && userId) {
+    const loansByUser = await prisma.loan.findMany({
+      where: { userId },
+      include: {
+        payments: {
+          orderBy: { paymentDate: "desc" },
+          take: 10,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    resolvedLoanData = loansByUser.find((l) => slugifyLoanName(l.name) === rawParam) ?? null;
+  }
+
+  if (!resolvedLoanData) {
     notFound();
   }
 
-  const loan = loanData;
+  const loan = resolvedLoanData;
 
   let profile = null;
   let userLoans: Array<{
@@ -111,7 +127,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
           <ArrowLeft className="h-4 w-4" />
           Back to Loans
         </Link>
-        <LoanActions loanId={loan.id} />
+        <LoanActions loanId={loan.id} loanName={loan.name} />
       </div>
 
       <div className="glass-panel p-6 md:p-8">

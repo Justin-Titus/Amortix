@@ -9,6 +9,7 @@ import { calculateEMI } from "@/lib/calculations/emi";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { buildLoanPath } from "@/lib/loans/url";
 
 type LoanFormValues = Omit<LoanInput, "startDate" | "nextEmiDate"> & {
   startDate: string;
@@ -43,6 +44,7 @@ export default function EditLoanForm({ loanId, initialData, onSuccess }: EditLoa
     handleSubmit,
     formState: { errors },
     watch,
+    getValues,
     setValue,
   } = useForm<LoanFormValues>({
     resolver: zodResolver(loanSchema) as unknown as Resolver<LoanFormValues>,
@@ -84,7 +86,7 @@ export default function EditLoanForm({ loanId, initialData, onSuccess }: EditLoa
     } else {
       router.refresh();
       if (onSuccess) onSuccess();
-      router.push(`/loans/${loanId}`);
+      router.push(buildLoanPath(data.name, loanId));
     }
   };
 
@@ -282,7 +284,7 @@ export default function EditLoanForm({ loanId, initialData, onSuccess }: EditLoa
       <div className="flex justify-end gap-3 pt-4">
         <button
           type="button"
-          onClick={() => router.push(`/loans/${loanId}`)}
+          onClick={() => router.push(buildLoanPath(getValues("name"), loanId))}
           className="btn-secondary"
         >
           Cancel
