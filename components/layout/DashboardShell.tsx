@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { BotMessageSquare } from "lucide-react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
@@ -48,40 +48,29 @@ export default function DashboardShell({
       <DashboardSidebar />
       <DashboardHeader onMenuToggle={() => setMobileOpen((prev) => !prev)} isMenuOpen={mobileOpen} />
 
-      <AnimatePresence>
-        {mobileOpen ? (
-          <motion.div
-            className="fixed inset-0 z-50 lg:hidden"
-            initial={reduce ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={reduce ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: reduce ? 0 : 0.22, ease: "easeOut" }}
-          >
-            <motion.button
-              className="absolute inset-0 bg-amortix-navy-deep/65 backdrop-blur-sm"
-              aria-label="Close menu"
-              onClick={() => setMobileOpen(false)}
-              initial={reduce ? { opacity: 1 } : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={reduce ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: reduce ? 0 : 0.18 }}
-            />
-            <motion.div
-              id="mobile-dashboard-sidebar"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Dashboard navigation"
-              className="relative h-full w-fit"
-              initial={reduce ? { x: 0 } : { x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={reduce ? { x: 0 } : { x: "-100%" }}
-              transition={{ duration: reduce ? 0 : 0.24, ease: "easeOut" }}
-            >
-              <DashboardSidebar mobile onNavigate={() => setMobileOpen(false)} />
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <div
+        className={`fixed inset-0 z-50 lg:hidden ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+        aria-hidden={!mobileOpen}
+      >
+        <button
+          className={`absolute inset-0 bg-amortix-navy-deep/55 transition-opacity ${reduce ? "duration-0" : "duration-150"} ${
+            mobileOpen ? "opacity-100" : "opacity-0"
+          }`}
+          aria-label="Close menu"
+          onClick={() => setMobileOpen(false)}
+        />
+        <div
+          id="mobile-dashboard-sidebar"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Dashboard navigation"
+          className={`relative h-full w-fit transform-gpu will-change-transform transition-transform ${
+            reduce ? "duration-0" : "duration-200"
+          } ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+        >
+          <DashboardSidebar mobile onNavigate={() => setMobileOpen(false)} />
+        </div>
+      </div>
 
       <main className="relative pt-14 lg:pl-60 lg:pt-14">
         <section
