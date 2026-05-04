@@ -17,6 +17,7 @@ import { MetricCard } from "@/components/ui/MetricCard";
 import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { calculateAffordabilityScore, getAffordabilityZoneLabel } from "@/lib/calculations/affordability";
+import { calculateStrategy, type LoanInput as StrategyLoanInput } from "@/lib/calculations/strategies";
 
 type Loan = {
   id: string;
@@ -68,13 +69,11 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
 
   const totalOutstanding = loans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
   const totalEMI = loans.reduce((sum, loan) => sum + loan.emiAmount, 0);
-  const totalPrincipal = loans.reduce((sum, loan) => sum + loan.principal, 0);
   const avgRate =
     totalOutstanding > 0
       ? loans.reduce((sum, loan) => sum + loan.interestRate * loan.outstandingBalance, 0) / totalOutstanding
       : 0;
 
-  const paidPercent = totalPrincipal > 0 ? ((totalPrincipal - totalOutstanding) / totalPrincipal) * 100 : 0;
   const affordability = useMemo(() => {
     if (
       !profile?.monthlyIncome ||
@@ -118,11 +117,34 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
 
   const chartData = useMemo(() => {
     const today = new Date();
-    const base = totalOutstanding;
+    const strategyLoans: StrategyLoanInput[] = loans
+      .filter((loan) => loan.outstandingBalance > 0 && loan.emiAmount > 0)
+      .map((loan) => ({
+        id: loan.id,
+        name: loan.name,
+        outstanding: loan.outstandingBalance,
+        annualRate: loan.interestRate,
+        emi: loan.emiAmount,
+      }));
+
+    if (strategyLoans.length === 0) {
+      return Array.from({ length: 12 }, (_, index) => {
+        const month = new Date(today.getFullYear(), today.getMonth() + index, 1);
+        return {
+          index,
+          month: month.toLocaleDateString("en-IN", { month: "short" }),
+          balance: 0,
+        };
+      });
+    }
+
+    const strategyResult = calculateStrategy(strategyLoans, 0, "avalanche");
 
     return Array.from({ length: 12 }, (_, index) => {
       const month = new Date(today.getFullYear(), today.getMonth() + index, 1);
-      const balance = Math.max(0, base - index * totalEMI * 0.9);
+      const balance = index === 0
+        ? totalOutstanding
+        : strategyResult.schedule[index - 1]?.totalDebtRemaining ?? 0;
 
       return {
         index,
@@ -130,7 +152,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
         balance,
       };
     });
-  }, [totalOutstanding, totalEMI]);
+  }, [loans, totalOutstanding]);
 
   const greeting = (() => {
     const hour = new Date().getHours();
