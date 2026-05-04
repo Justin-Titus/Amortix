@@ -38,6 +38,6 @@ export const mobileBottomItems: NavItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: BarChart3, label: "Loans", href: "/loans" },
   { icon: Target, label: "Strategy", href: "/strategy" },
+  { icon: TrendingUp, label: "Analysis", href: "/analysis" },
   { icon: MessageSquare, label: "AI Advisor", href: "/chat" },
-  { icon: UserRound, label: "Profile", href: "/profile" },
 ];
