@@ -197,10 +197,6 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
     [results]
   );
 
-  const payoffData = useMemo(
-    () => selectedResult.schedule.map((item) => ({ month: formatShortMonth(item.month), balance: item.totalDebtRemaining })),
-    [selectedResult.schedule]
-  );
 
   const bestStrategy = useMemo(() => {
     const entries = [results.avalanche, results.snowball, results.hybrid];
@@ -380,7 +376,7 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
             </div>
           </motion.div>
 
-          <motion.div variants={fadeUpVariants} custom={1} className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <motion.div variants={fadeUpVariants} custom={1} className="grid grid-cols-1 gap-4">
             <div className="card min-h-90">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -412,37 +408,6 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
 
             </div>
 
-            <div className="card min-h-90">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-[13px] font-medium text-amortix-navy">Payoff curve</h2>
-                  <p className="text-[11px] text-amortix-slate">Selected strategy balance over time</p>
-                </div>
-                <div className="flex items-center gap-2 text-[11px] text-amortix-slate">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: selectedMeta.fill }} />
-                  {selectedMeta.name}
-                </div>
-              </div>
-              <ChartContainer height={280}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={payoffData} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
-
-                    <defs>
-                      <linearGradient id={`balance-gradient-${selectedStrategy}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={selectedMeta.fill} stopOpacity={0.22} />
-                        <stop offset="95%" stopColor={selectedMeta.fill} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                    <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748B" }} />
-                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748B" }} tickFormatter={(value) => `₹${Math.round(value / 100000)}L`} />
-                    <Tooltip formatter={formatTooltipValue} contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)" }} />
-                    <Area type="monotone" dataKey="balance" stroke={selectedMeta.fill} strokeWidth={2.5} fill={`url(#balance-gradient-${selectedStrategy})`} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-
-            </div>
           </motion.div>
 
           <motion.div variants={fadeUpVariants} custom={2} className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">

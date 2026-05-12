@@ -12,6 +12,7 @@ import AffordabilityGauge from "@/components/dashboard/AffordabilityGauge";
 import LoanProgressBar from "@/components/dashboard/LoanProgressBar";
 import AIInsightCard from "@/components/dashboard/AIInsightCard";
 import HealthTrendChart, { type HealthSnapshotPoint } from "@/components/analysis/HealthTrendChart";
+import DebtDistributionChart from "@/components/dashboard/DebtDistributionChart";
 import InterestLeakDetector from "@/components/analysis/InterestLeakDetector";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { PageHero } from "@/components/layout/PageHero";
@@ -44,7 +45,7 @@ type DashboardHomeProps = {
   snapshots: HealthSnapshotPoint[];
 };
 
-const loanColors = ["#1E3A5F", "#059669", "#F59E0B", "#378ADD", "#DC2626", "#34D399"];
+const loanColors = ["#17314f", "#118c76", "#f59f3a", "#378ADD", "#d14d5b", "#64748b"];
 
 function formatCompactCurrency(amount: number): string {
   if (amount === 0) return "₹0";
@@ -115,44 +116,16 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
   const debtFreeDate =
     projectedMonths > 0 ? new Date(new Date().setMonth(new Date().getMonth() + projectedMonths)) : null;
 
-  const chartData = useMemo(() => {
-    const today = new Date();
-    const strategyLoans: StrategyLoanInput[] = loans
-      .filter((loan) => loan.outstandingBalance > 0 && loan.emiAmount > 0)
-      .map((loan) => ({
-        id: loan.id,
-        name: loan.name,
-        outstanding: loan.outstandingBalance,
-        annualRate: loan.interestRate,
-        emi: loan.emiAmount,
+
+  const distributionData = useMemo(() => {
+    return loans
+      .filter((l) => l.outstandingBalance > 0)
+      .map((l, i) => ({
+        name: l.name,
+        balance: l.outstandingBalance,
+        color: loanColors[i % loanColors.length],
       }));
-
-    if (strategyLoans.length === 0) {
-      return Array.from({ length: 12 }, (_, index) => {
-        const month = new Date(today.getFullYear(), today.getMonth() + index, 1);
-        return {
-          index,
-          month: month.toLocaleDateString("en-IN", { month: "short" }),
-          balance: 0,
-        };
-      });
-    }
-
-    const strategyResult = calculateStrategy(strategyLoans, 0, "avalanche");
-
-    return Array.from({ length: 12 }, (_, index) => {
-      const month = new Date(today.getFullYear(), today.getMonth() + index, 1);
-      const balance = index === 0
-        ? totalOutstanding
-        : strategyResult.schedule[index - 1]?.totalDebtRemaining ?? 0;
-
-      return {
-        index,
-        month: month.toLocaleDateString("en-IN", { month: "short" }),
-        balance,
-      };
-    });
-  }, [loans, totalOutstanding]);
+  }, [loans]);
 
   const greeting = (() => {
     const hour = new Date().getHours();
@@ -434,36 +407,12 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
             </motion.div>
 
             <motion.div variants={fadeUpVariants} custom={2} className="card space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-[13px] font-medium text-amortix-navy">Repayment momentum</h2>
-                  <p className="text-[11px] text-amortix-slate">Balance trajectory for the next 12 months</p>
-                </div>
-                <span className="badge-green">Avalanche</span>
+              <div>
+                <h2 className="text-[13px] font-medium text-amortix-navy">Debt distribution</h2>
+                <p className="text-[11px] text-amortix-slate">Percentage breakdown of your portfolio</p>
               </div>
 
-              <ChartContainer height={176}>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-
-                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                    <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748B" }} />
-                    <YAxis tickFormatter={(val) => `₹${(val / 100000).toFixed(0)}L`} tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: "#94A3B8" }} />
-                    <Bar
-                      dataKey="balance"
-                      radius={[4, 4, 0, 0]}
-                      animationDuration={reduce ? 0 : 800}
-                      animationBegin={reduce ? 0 : 50}
-                      animationEasing="ease-out"
-                    >
-                      {chartData.map((entry, index) => {
-                        const color = index < 3 ? "rgba(17,140,118,0.25)" : index > 8 ? "#4de0b3" : "#118c76";
-                        return <Cell key={`${entry.month}-${index}`} fill={color} />;
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              <DebtDistributionChart loans={distributionData} />
             </motion.div>
           </motion.div>
         </section>
