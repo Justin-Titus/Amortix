@@ -23,6 +23,7 @@ model User {
   financialProfile   FinancialProfile?
   rateLimits         RateLimit[]
   notifications      Notification[]
+  expoPushToken      String?
 }
 
 model FinancialProfile {
