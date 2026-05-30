@@ -10,7 +10,7 @@ export const prisma =
     adapter: new PrismaPg({
       connectionString: env.DATABASE_URL,
       max: 1, // Restrict connection pool to exactly 1 connection per serverless function instance to prevent exhaustion on Supabase
-      connectionTimeoutMillis: 10000, // Timeout after 10 seconds of trying to connect
+      connectionTimeoutMillis: 30000, // Timeout after 30 seconds of trying to connect (allows free databases to wake up)
       idleTimeoutMillis: 10000, // Close idle connections after 10 seconds to free them up
       ssl: { rejectUnauthorized: false }, // Prevent 'self-signed certificate in certificate chain' error
     }),

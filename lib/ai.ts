@@ -2,7 +2,9 @@ import { createGroq } from "@ai-sdk/groq";
 import { createTextStreamResponse, generateText, streamText } from "ai";
 import type { ModelMessage } from "ai";
 
-const groq = createGroq()("llama-3.1-8b-instant");
+const groq = createGroq({
+  apiKey: process.env.GROQ_API_KEY,
+})("llama-3.1-8b-instant");
 
 /**
  * Generate text using the Groq model.

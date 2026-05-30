@@ -68,10 +68,8 @@ async function buildFinancialContext(userId: string) {
       )}, Monthly Expenses ${formatCurrency(
         financialProfile.monthlyExpenses,
         currencyCode
-      )}, Monthly Surplus ${formatCurrency(monthlySurplus, currencyCode)}, Employment ${
-        financialProfile.employmentType
-      }, Credit Score Range ${financialProfile.creditScoreRange}, Emergency Fund ${
-        financialProfile.hasEmergencyFund ? "Yes" : "No"
+      )}, Monthly Surplus ${formatCurrency(monthlySurplus, currencyCode)}, Employment ${financialProfile.employmentType
+      }, Credit Score Range ${financialProfile.creditScoreRange}, Emergency Fund ${financialProfile.hasEmergencyFund ? "Yes" : "No"
       } (${financialProfile.emergencyFundMonths} months).`
     );
   }
@@ -126,6 +124,7 @@ export async function POST(req: Request) {
       : chatRequestSchema.safeParse(rawBody);
 
     if (!safeParseResult.success) {
+      console.error("Parse failed! rawBody was:", JSON.stringify(rawBody, null, 2));
       // Return 400 Bad Request with validation errors
       return new Response(JSON.stringify({ errors: safeParseResult.error.issues }), {
         status: 400,
@@ -138,10 +137,26 @@ export async function POST(req: Request) {
 
     const financialContext = await buildFinancialContext(userId);
 
-    const uiMessagesWithoutIds = messages.map((message) => ({
-      role: message.role,
-      content: message.content,
-    }));
+    const uiMessagesWithoutIds = messages.map((message: any) => {
+      let contentStr = message.content;
+      let parts = message.parts;
+
+      if (!parts) {
+        parts = [{ type: "text", text: contentStr || "" }];
+      }
+      if (!contentStr) {
+        contentStr = parts
+          .filter((p: any) => p.type === "text")
+          .map((p: any) => p.text)
+          .join("");
+      }
+
+      return {
+        role: message.role,
+        content: contentStr || "",
+        parts: parts,
+      };
+    });
     const modelMessages = await convertToModelMessages(
       uiMessagesWithoutIds as unknown as Omit<UIMessage, "id">[]
     );
