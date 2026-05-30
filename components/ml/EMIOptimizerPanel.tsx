@@ -4,9 +4,9 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   optimizeEMIAllocation,
+  formatCurrency,
   type LoanState,
-} from "@/lib/ml/emi-optimizer";
-import { formatCurrency } from "@/lib/calculations/emi";
+} from "@/lib/calculations";
 
 function confidenceLabel(score: number): string {
   if (score >= 70) return "High confidence";
@@ -18,14 +18,16 @@ export default function EMIOptimizerPanel({
   loans,
   extraBudget,
   onExtraBudgetChange,
+  currencyCode = "INR",
 }: {
   loans: LoanState[];
   extraBudget: number;
   onExtraBudgetChange: (value: number) => void;
+  currencyCode?: string;
 }) {
   const result = useMemo(
-    () => optimizeEMIAllocation(loans, extraBudget),
-    [loans, extraBudget]
+    () => optimizeEMIAllocation(loans, extraBudget, currencyCode),
+    [loans, extraBudget, currencyCode]
   );
 
   return (
@@ -75,11 +77,11 @@ export default function EMIOptimizerPanel({
                 className="border-t border-amortix-border-light"
               >
                 <td className="px-3 py-2 text-amortix-navy">{allocation.loanName}</td>
-                <td className="px-3 py-2 font-mono text-amortix-slate">{formatCurrency(allocation.baseEMI)}</td>
+                <td className="px-3 py-2 font-mono text-amortix-slate">{formatCurrency(allocation.baseEMI, currencyCode)}</td>
                 <td className={`px-3 py-2 font-mono ${allocation.extraAllocation > 0 ? "text-amortix-emerald" : "text-amortix-slate"}`}>
-                  {formatCurrency(allocation.extraAllocation)}
+                  {formatCurrency(allocation.extraAllocation, currencyCode)}
                 </td>
-                <td className="px-3 py-2 font-mono text-amortix-navy">{formatCurrency(allocation.totalPayment)}</td>
+                <td className="px-3 py-2 font-mono text-amortix-navy">{formatCurrency(allocation.totalPayment, currencyCode)}</td>
                 <td className="px-3 py-2 text-amortix-slate">{(allocation.marginalInterestSaved * 100).toFixed(2)}%</td>
               </motion.tr>
             ))}
@@ -89,7 +91,7 @@ export default function EMIOptimizerPanel({
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="badge-green px-3 py-1.5 text-xs">
-          {formatCurrency(result.totalInterestSaved)} saved vs minimum
+          {formatCurrency(result.totalInterestSaved, currencyCode)} saved vs minimum
         </div>
         <div className={`rounded-full px-3 py-1.5 text-xs font-semibold ${result.vsAvalanche.monthsDifference > 0 ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
           {Math.max(0, result.vsAvalanche.monthsDifference)} months earlier vs Avalanche

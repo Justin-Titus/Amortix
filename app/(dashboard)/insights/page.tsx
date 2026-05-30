@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { getLoans } from "@/app/actions/loan";
 import { getUserSettings } from "@/app/actions/settings";
-import { detectInterestLeaks } from "@/lib/analysis/interest-leak";
-import type { LoanInput as LeakLoanInput } from "@/lib/analysis/interest-leak";
+import {
+  detectInterestLeaks,
+  predictDefaultRisk,
+  formatCurrency,
+  monthsSince,
+  type LoanInput as LeakLoanInput,
+} from "@/lib/calculations";
+import { buildLoanPath } from "@/lib/loans/url";
 import type { FinancialProfileInput } from "@/lib/validations/profile.schema";
-import { predictDefaultRisk } from "@/lib/ml/default-risk";
-import { formatCurrency } from "@/lib/calculations/emi";
 import { Check, Lock, Sparkles } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageWrapper } from "@/components/layout/PageWrapper";
-import { monthsSince } from "@/lib/utils/insights";
 import { RiskWatchlist } from "@/components/insights/RiskWatchlist";
 import { LeakDetector } from "@/components/insights/LeakDetector";
 import { Card } from "@/components/ui/Card";
@@ -50,6 +53,7 @@ export default async function InsightsPage() {
 
   const profile = user.financialProfile;
   const typedProfile = profile;
+  const currencyCode = (profile as any)?.currency ?? "INR";
 
   const totals = {
     outstanding: loans.reduce((sum, loan) => sum + loan.outstandingBalance, 0),
@@ -77,7 +81,9 @@ export default async function InsightsPage() {
           monthlyExpenses: typedProfile.monthlyExpenses,
           hasEmergencyFund: typedProfile.hasEmergencyFund,
           emergencyFundMonths: typedProfile.emergencyFundMonths,
-        }
+        },
+        currencyCode,
+        (type, loanId, loanName) => type === "FLOATING_RATE_RISK" ? "/strategy" : buildLoanPath(loanName, loanId)
       )
     : [];
 
@@ -101,7 +107,7 @@ export default async function InsightsPage() {
             totalMonthlyEMI: totals.emi,
             numberOfActiveLoans: loans.length,
             debtToIncomeRatio: typedProfile.monthlyIncome > 0 ? totals.emi / typedProfile.monthlyIncome : 1,
-          });
+          }, currencyCode);
 
           return {
             loanId: loan.id,
@@ -121,8 +127,8 @@ export default async function InsightsPage() {
           title="Insights"
           description="Track portfolio pressure and identify the next action with the biggest repayment impact."
           stats={[
-            { label: "Total debt", value: formatCurrency(0), muted: true },
-            { label: "Monthly EMI", value: formatCurrency(0), muted: true },
+            { label: "Total debt", value: formatCurrency(0, currencyCode), muted: true },
+            { label: "Monthly EMI", value: formatCurrency(0, currencyCode), muted: true },
             { label: "Avg rate", value: "0.00%", muted: true },
           ]}
         />
@@ -146,8 +152,8 @@ export default async function InsightsPage() {
         title="Insights"
         description="Track portfolio pressure and identify the next action with the biggest repayment impact."
         stats={[
-          { label: "Total debt", value: formatCurrency(totals.outstanding), muted: totals.outstanding === 0 },
-          { label: "Monthly EMI", value: formatCurrency(totals.emi), muted: totals.emi === 0 },
+          { label: "Total debt", value: formatCurrency(totals.outstanding, currencyCode), muted: totals.outstanding === 0 },
+          { label: "Monthly EMI", value: formatCurrency(totals.emi, currencyCode), muted: totals.emi === 0 },
           { label: "Avg rate", value: `${totals.avgRate.toFixed(2)}%`, muted: totals.avgRate === 0 },
         ]}
       />
@@ -187,7 +193,7 @@ export default async function InsightsPage() {
       ) : (
         <>
           <RiskWatchlist rows={riskRows} />
-          <LeakDetector leaks={leaks} />
+          <LeakDetector leaks={leaks} currencyCode={currencyCode} />
         </>
       )}
     </PageWrapper>

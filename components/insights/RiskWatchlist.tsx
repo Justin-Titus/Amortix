@@ -1,4 +1,4 @@
-import { type DefaultRiskResult } from "@/lib/ml/default-risk";
+import { type DefaultRiskResult } from "@/lib/calculations";
 import { riskTone } from "@/lib/utils/insights";
 import { Card } from "@/components/ui/Card";
 

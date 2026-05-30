@@ -48,7 +48,7 @@ export default function ChatAssistant({ initialInput }: { initialInput?: string 
     sendMessage({ text: input });
     setInput("");
   };
-  
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const copyTimeoutRef = useRef<number | null>(null);
 
@@ -123,15 +123,15 @@ export default function ChatAssistant({ initialInput }: { initialInput?: string 
             </p>
             <div className="grid w-full grid-cols-1 gap-3 pt-4">
               <button onClick={() => {
-                  const prompt = "Which repayment strategy is best for my current loans?";
-                  sendMessage({ text: prompt });
-                }} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
+                const prompt = "Which repayment strategy is best for my current loans?";
+                sendMessage({ text: prompt });
+              }} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
                 &ldquo;Which repayment strategy is best for my current loans?&rdquo;
               </button>
               <button onClick={() => {
-                  const prompt = "How much interest will I save if I pay an extra ₹5000 per month?";
-                  sendMessage({ text: prompt });
-                }} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
+                const prompt = "How much interest will I save if I pay an extra ₹5000 per month?";
+                sendMessage({ text: prompt });
+              }} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
                 &ldquo;How much interest will I save if I pay an extra ₹5000 per month?&rdquo;
               </button>
             </div>
@@ -140,51 +140,49 @@ export default function ChatAssistant({ initialInput }: { initialInput?: string 
           messages.map((message) => {
             const textContent = getMessageText(message as DisplayMessage);
             return (
-            <div
-              key={message.id}
-              className={`group relative flex gap-4 ${
-                message.role === "user" ? "flex-row-reverse" : "flex-row"
-              }`}
-            >
-              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl ${
-                message.role === "user" 
-                  ? "bg-white text-amortix-navy shadow-sm" 
-                  : "bg-amortix-navy text-white shadow-[0_12px_20px_rgba(13,27,47,0.12)]"
-              }`}>
-                {message.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-              </div>
               <div
-                className={`max-w-[80%] rounded-[22px] px-5 py-4 text-sm ${
-                  message.role === "user"
-                    ? "bg-amortix-navy text-white shadow-[0_18px_28px_rgba(13,27,47,0.16)]"
-                    : "border border-white/70 bg-white/85 text-amortix-slate shadow-sm prose prose-sm max-w-none"
-                }`}
+                key={message.id}
+                className={`group relative flex gap-4 ${message.role === "user" ? "flex-row-reverse" : "flex-row"
+                  }`}
               >
-                {message.role === "user" ? (
-                  <p className="whitespace-pre-wrap">{textContent}</p>
-                ) : (
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => copyMessage(message.id, textContent)}
-                      className="absolute right-0 top-0 translate-x-2 -translate-y-2 rounded-full border border-white/80 bg-white p-2 text-amortix-slate opacity-0 shadow-sm transition-all group-hover:opacity-100 hover:text-amortix-navy"
-                      aria-label="Copy assistant response"
-                      title="Copy response"
-                    >
-                      {copiedMessageId === message.id ? (
-                        <Check className="h-3.5 w-3.5 text-amortix-emerald" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                    <ReactMarkdown>{textContent}</ReactMarkdown>
-                  </div>
-                )}
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl ${message.role === "user"
+                    ? "bg-white text-amortix-navy shadow-sm"
+                    : "bg-amortix-navy text-white shadow-[0_12px_20px_rgba(13,27,47,0.12)]"
+                  }`}>
+                  {message.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                </div>
+                <div
+                  className={`max-w-[80%] rounded-[22px] px-5 py-4 text-sm ${message.role === "user"
+                      ? "bg-amortix-navy text-white shadow-[0_18px_28px_rgba(13,27,47,0.16)]"
+                      : "border border-white/70 bg-white/85 text-amortix-slate shadow-sm prose prose-sm max-w-none"
+                    }`}
+                >
+                  {message.role === "user" ? (
+                    <p className="whitespace-pre-wrap">{textContent}</p>
+                  ) : (
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => copyMessage(message.id, textContent)}
+                        className="absolute right-0 top-0 translate-x-2 -translate-y-2 rounded-full border border-white/80 bg-white p-2 text-amortix-slate opacity-0 shadow-sm transition-all group-hover:opacity-100 hover:text-amortix-navy"
+                        aria-label="Copy assistant response"
+                        title="Copy response"
+                      >
+                        {copiedMessageId === message.id ? (
+                          <Check className="h-3.5 w-3.5 text-amortix-emerald" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                      <ReactMarkdown>{textContent}</ReactMarkdown>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )})
+            )
+          })
         )}
-        
+
         {isLoading && messages[messages.length - 1]?.role === "user" && (
           <div className="flex gap-4 flex-row">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-amortix-navy text-white">
@@ -240,7 +238,7 @@ export default function ChatAssistant({ initialInput }: { initialInput?: string 
           )}
         </form>
         <p className="mt-3 text-center text-[10px] text-amortix-slate">
-          Shift + Enter for new line • This is not financial advice - verify important financial decisions with a qualified professional.
+          This is not financial advice - verify important financial decisions with a qualified professional.
         </p>
       </div>
     </div>

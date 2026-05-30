@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { compareAllStrategies, type LoanInput } from "@/lib/calculations/strategies";
-import { formatCurrency } from "@/lib/calculations/emi";
+import {
+  compareAllStrategies,
+  formatCurrency,
+  formatCompactCurrency,
+  getCurrencyConfig,
+  type StrategyLoanInput,
+} from "@/lib/calculations";
 import { Info, Calculator, Target, Zap, Snowflake, BarChart2 } from "lucide-react";
 import { 
   BarChart, 
@@ -20,12 +25,18 @@ import EMIOptimizerPanel from "@/components/ml/EMIOptimizerPanel";
 import SliderField from "@/components/ui/SliderField";
 import { StrategyOptionButton } from "./StrategyOptionButton";
 
-function formatTooltipValue(value: string | number | readonly (string | number)[] | undefined) {
+function formatTooltipValue(value: string | number | readonly (string | number)[] | undefined, currencyCode: string = "INR") {
   const normalized = Array.isArray(value) ? value[0] : value;
-  return formatCurrency(Number(normalized ?? 0));
+  return formatCurrency(Number(normalized ?? 0), currencyCode);
 }
 
-export default function StrategyComparison({ loans }: { loans: LoanInput[] }) {
+export default function StrategyComparison({
+  loans,
+  currencyCode = "INR",
+}: {
+  loans: StrategyLoanInput[];
+  currencyCode?: string;
+}) {
   const [extraPayment, setExtraPayment] = useState<number>(0);
   const [oneTimePayment, setOneTimePayment] = useState<number>(0);
   const [selectedStrategy, setSelectedStrategy] = useState<"avalanche" | "snowball" | "hybrid">("avalanche");
@@ -118,8 +129,9 @@ export default function StrategyComparison({ loans }: { loans: LoanInput[] }) {
                 min={0}
                 max={100000}
                 step={1000}
-                displayValue={formatCurrency(extraPayment)}
+                displayValue={formatCurrency(extraPayment, currencyCode)}
                 onChange={setExtraPayment}
+                currencyCode={currencyCode}
               />
               <SliderField
                 label="One-time prepayment"
@@ -127,8 +139,9 @@ export default function StrategyComparison({ loans }: { loans: LoanInput[] }) {
                 min={0}
                 max={1000000}
                 step={10000}
-                displayValue={formatCurrency(oneTimePayment)}
+                displayValue={formatCurrency(oneTimePayment, currencyCode)}
                 onChange={setOneTimePayment}
+                currencyCode={currencyCode}
               />
             </div>
           </div>
@@ -143,6 +156,7 @@ export default function StrategyComparison({ loans }: { loans: LoanInput[] }) {
             }))}
             extraBudget={extraPayment}
             onExtraBudgetChange={setExtraPayment}
+            currencyCode={currencyCode}
           />
         </div>
 
@@ -151,7 +165,7 @@ export default function StrategyComparison({ loans }: { loans: LoanInput[] }) {
             <div className="dark-panel p-5">
               <p className="mb-2 text-xs tracking-[0.03em] text-slate-300">Total interest saved</p>
               <p className={`text-3xl font-currency font-medium ${activeStrObj.data.totalSavedVsMinimum > 0 ? "text-(--color-emerald-light)" : "text-slate-500"}`}>
-                {formatCurrency(activeStrObj.data.totalSavedVsMinimum)}
+                {formatCurrency(activeStrObj.data.totalSavedVsMinimum, currencyCode)}
               </p>
               <p className="mt-2 text-xs text-slate-400">vs minimum payments</p>
             </div>
@@ -162,17 +176,17 @@ export default function StrategyComparison({ loans }: { loans: LoanInput[] }) {
                 {baseline.months - activeStrObj.data.monthsToPayoff} <span className="text-base font-normal text-(--color-slate)">mo</span>
               </p>
               <p className="mt-2 text-xs text-amortix-slate">
-                New payoff: {activeStrObj.data.payoffDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                New payoff: {activeStrObj.data.payoffDate.toLocaleDateString(getCurrencyConfig(currencyCode).locale, { month: 'short', year: 'numeric' })}
               </p>
             </div>
 
             <div className="section-block border-l-4 p-5" style={{ borderLeftColor: activeStrObj.color }}>
               <p className="mb-2 text-xs tracking-[0.03em] text-slate-400">Total interest paid</p>
               <p className="text-3xl font-currency font-medium text-(--color-navy)">
-                {formatCurrency(activeStrObj.data.totalInterestPaid)}
+                {formatCurrency(activeStrObj.data.totalInterestPaid, currencyCode)}
               </p>
               <p className="mt-2 text-xs text-amortix-slate">
-                Down from {formatCurrency(baseline.totalInterest)}
+                Down from {formatCurrency(baseline.totalInterest, currencyCode)}
               </p>
             </div>
           </div>
@@ -195,11 +209,11 @@ export default function StrategyComparison({ loans }: { loans: LoanInput[] }) {
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
-                    tickFormatter={(val) => `₹${(val / 100000).toFixed(1)}L`} 
+                    tickFormatter={(val) => formatCompactCurrency(val, currencyCode)} 
                     tick={{ fontSize: 12, fill: "#64748B" }}
                   />
                   <Tooltip 
-                    formatter={formatTooltipValue}
+                    formatter={(val) => formatTooltipValue(val, currencyCode)}
                     cursor={{ fill: '#F8FAFC' }}
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
                   />

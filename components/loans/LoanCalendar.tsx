@@ -5,12 +5,12 @@ import { CalendarDays, Info } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
 import CalendarControls from "@/components/loans/CalendarControls";
-import { formatINR } from "@/lib/calculations/emi";
-import { buildCalendarData, formatDateKey, RawLoan } from "@/lib/calculations/calendar";
+import { formatCurrency, getCurrencyConfig, buildCalendarData, formatDateKey, RawLoan } from "@/lib/calculations";
 
 type LoanCalendarProps = {
   loans: RawLoan[];
   initialMonth?: string;
+  currencyCode?: string;
 };
 
 function padNumber(value: number) {
@@ -39,7 +39,7 @@ function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
 }
 
-export default function LoanCalendar({ loans, initialMonth }: LoanCalendarProps) {
+export default function LoanCalendar({ loans, initialMonth, currencyCode = "INR" }: LoanCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(() =>
     parseYearMonth(initialMonth ?? new Date().toISOString().slice(0, 7))
   );
@@ -67,7 +67,7 @@ export default function LoanCalendar({ loans, initialMonth }: LoanCalendarProps)
         title="EMI Calendar"
         description="Plan upcoming dues across all loans and avoid payment pileups."
         stats={[
-          { label: "Due in next 30 days", value: formatINR(totalDueIn30), muted: totalDueIn30 === 0 },
+          { label: "Due in next 30 days", value: formatCurrency(totalDueIn30, currencyCode), muted: totalDueIn30 === 0 },
           { label: "Scheduled payments", value: `${dueIn30.length}`, muted: dueIn30.length === 0 },
         ]}
       />
@@ -162,7 +162,7 @@ export default function LoanCalendar({ loans, initialMonth }: LoanCalendarProps)
 
                   {dayEntry ? (
                     <div className="mt-1 flex flex-col gap-0.5 sm:mt-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="truncate text-[9px] text-slate-600 sm:text-[11px]">{formatINR(dayEntry.totalDue, true)}</div>
+                      <div className="truncate text-[9px] text-slate-600 sm:text-[11px]">{formatCurrency(dayEntry.totalDue, currencyCode, { compact: true })}</div>
                       <div className="text-[9px] text-slate-400 sm:text-[11px]">{dayEntry.loans.length} EMI{dayEntry.loans.length>1?'s':''}</div>
                     </div>
                   ) : null}
@@ -188,22 +188,22 @@ export default function LoanCalendar({ loans, initialMonth }: LoanCalendarProps)
 
           {selectedDay ? (
             <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4">
-              <p className="text-sm font-medium text-[#0D1F3C]">{new Date(selectedDay.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-              <p className="mt-2 text-sm text-slate-500">{`₹${selectedDay.totalPaid.toLocaleString('en-IN')} paid / ₹${selectedDay.totalDue.toLocaleString('en-IN')} due`}</p>
+              <p className="text-sm font-medium text-[#0D1F3C]">{new Date(selectedDay.date).toLocaleDateString(getCurrencyConfig(currencyCode).locale, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+              <p className="mt-2 text-sm text-slate-500">{`${formatCurrency(selectedDay.totalPaid, currencyCode)} paid / ${formatCurrency(selectedDay.totalDue, currencyCode)} due`}</p>
 
               <div className="mt-3 space-y-3">
                 {selectedDay.loans.map((l) => (
                   <div key={l.loanId} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
                     <div>
                       <p className="text-sm text-[#0D1F3C]">{l.loanName}</p>
-                      <p className="text-[11px] text-slate-500">{formatINR(l.emiAmount)}</p>
+                      <p className="text-[11px] text-slate-500">{formatCurrency(l.emiAmount, currencyCode)}</p>
                     </div>
                     <div className="text-right">
                       <p className={`text-sm font-medium ${l.status === 'paid' ? 'text-emerald-700 line-through opacity-80' : 'text-[#0D1F3C]'}`}>
-                        Paid {formatINR(l.paidAmount)}
+                        Paid {formatCurrency(l.paidAmount, currencyCode)}
                       </p>
                       <p className="text-[11px] text-slate-400">
-                        Due {formatINR(Math.max(0, l.emiAmount - l.paidAmount), true)} • {l.status.toUpperCase()}
+                        Due {formatCurrency(Math.max(0, l.emiAmount - l.paidAmount), currencyCode, { compact: true })} • {l.status.toUpperCase()}
                       </p>
                     </div>
                   </div>
@@ -221,9 +221,9 @@ export default function LoanCalendar({ loans, initialMonth }: LoanCalendarProps)
                     <div key={`${entry.loanId}-${entry.dueDate.toISOString()}`} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
                       <div>
                         <p className="text-sm text-[#0D1F3C]">{entry.loanName}</p>
-                        <p className="text-[11px] text-slate-500">{new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' }).format(entry.dueDate)}</p>
+                        <p className="text-[11px] text-slate-500">{new Intl.DateTimeFormat(getCurrencyConfig(currencyCode).locale, { day: 'numeric', month: 'short' }).format(entry.dueDate)}</p>
                       </div>
-                      <p className="text-sm font-medium text-[#0D1F3C]">{formatINR(entry.amount)}</p>
+                      <p className="text-sm font-medium text-[#0D1F3C]">{formatCurrency(entry.amount, currencyCode)}</p>
                     </div>
                   ))}
                 </div>

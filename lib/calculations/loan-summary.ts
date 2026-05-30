@@ -1,4 +1,4 @@
-import { formatCurrency } from "./emi";
+import { formatCurrency } from "./currency";
 
 export type LoanSummaryInput = {
   outstandingBalance: number;
@@ -34,13 +34,13 @@ export function summarizeLoans(loans: LoanSummaryInput[]): LoanSummary {
   };
 }
 
-export function buildLoanHeroStats(loans: LoanSummaryInput[]): LoanHeroStat[] {
+export function buildLoanHeroStats(loans: LoanSummaryInput[], currencyCode: string = "INR"): LoanHeroStat[] {
   const { loans: count, totalOutstanding, totalEMI, avgRate } = summarizeLoans(loans);
 
   return [
     { label: "Loans", value: count.toString(), muted: count === 0 },
-    { label: "Debt", value: formatCurrency(totalOutstanding), muted: totalOutstanding === 0 },
-    { label: "Monthly EMI", value: formatCurrency(totalEMI), muted: totalEMI === 0 },
+    { label: "Debt", value: formatCurrency(totalOutstanding, currencyCode), muted: totalOutstanding === 0 },
+    { label: "Monthly EMI", value: formatCurrency(totalEMI, currencyCode), muted: totalEMI === 0 },
     { label: "Avg rate", value: `${avgRate.toFixed(2)}%`, muted: avgRate === 0 },
   ];
 }

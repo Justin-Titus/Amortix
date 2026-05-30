@@ -14,16 +14,9 @@ import { ChartContainer } from "@/components/ui/ChartContainer";
 import {
   generateAmortizationSchedule,
   getScheduleSummary,
-} from "@/lib/calculations/amortization";
-
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+  formatCurrency,
+  getCurrencyConfig,
+} from "@/lib/calculations";
 
 function estimateRemainingMonths(outstanding: number, annualRate: number, emi: number, fallback: number): number {
   if (outstanding <= 0 || emi <= 0) {
@@ -55,11 +48,13 @@ export default function PrepaymentSimulator({
   interestRate,
   tenureMonths,
   emiAmount,
+  currencyCode = "INR",
 }: {
   outstandingBalance: number;
   interestRate: number;
   tenureMonths: number;
   emiAmount: number;
+  currencyCode?: string;
 }) {
   const [tab, setTab] = useState<TabKey>("lump");
   const [lumpSum, setLumpSum] = useState(10000);
@@ -211,11 +206,11 @@ export default function PrepaymentSimulator({
         </div>
         <div className="metric-card">
           <p className="mb-1 text-[11px] tracking-[0.03em] text-slate-400">Interest saved</p>
-          <p className="num mt-1 text-xl text-amortix-emerald">{formatCurrency(interestSaved)}</p>
+          <p className="num mt-1 text-xl text-amortix-emerald">{formatCurrency(interestSaved, currencyCode)}</p>
         </div>
         <div className="metric-card">
           <p className="mb-1 text-[11px] tracking-[0.03em] text-slate-400">New payoff date</p>
-          <p className="mt-1 text-sm text-amortix-navy">{payoffDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" })}</p>
+          <p className="mt-1 text-sm text-amortix-navy">{payoffDate.toLocaleDateString(getCurrencyConfig(currencyCode).locale, { month: "short", year: "numeric" })}</p>
         </div>
         <div className="metric-card">
           <p className="mb-1 text-[11px] tracking-[0.03em] text-slate-400">Reduced tenure</p>
@@ -231,7 +226,7 @@ export default function PrepaymentSimulator({
             <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748B" }} tickLine={false} axisLine={false} />
             <YAxis tick={{ fontSize: 10, fill: "#64748B" }} tickLine={false} axisLine={false} />
             <Tooltip
-              formatter={(value) => [formatCurrency(Number(value)), "Outstanding"]}
+              formatter={(value) => [formatCurrency(Number(value), currencyCode), "Outstanding"]}
               contentStyle={{ borderRadius: 8, border: "1px solid #E2E8F0" }}
             />
             <Line type="monotone" dataKey="original" stroke="#94A3B8" strokeDasharray="5 4" dot={false} strokeWidth={2} />
@@ -242,8 +237,8 @@ export default function PrepaymentSimulator({
 
 
       <p className="text-xs text-amortix-slate">
-        If you invested {formatCurrency(scenarioCapital)} in a fixed deposit at 7%, you&apos;d earn {formatCurrency(fdReturn)}.
-        Prepaying saves {formatCurrency(interestSaved)} in interest, net advantage: {formatCurrency(netAdvantage)}.
+        If you invested {formatCurrency(scenarioCapital, currencyCode)} in a fixed deposit at 7%, you&apos;d earn {formatCurrency(fdReturn, currencyCode)}.
+        Prepaying saves {formatCurrency(interestSaved, currencyCode)} in interest, net advantage: {formatCurrency(netAdvantage, currencyCode)}.
       </p>
     </div>
   );

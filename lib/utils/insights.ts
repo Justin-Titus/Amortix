@@ -1,4 +1,4 @@
-import { type DefaultRiskResult } from "@/lib/ml/default-risk";
+import { type DefaultRiskResult } from "@/lib/calculations";
 
 export function monthsSince(dateInput: Date | string | null | undefined): number {
   if (!dateInput) return 0;

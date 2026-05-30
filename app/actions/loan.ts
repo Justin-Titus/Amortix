@@ -23,6 +23,7 @@ export type LoanRecord = {
   nextEmiDate: Date | null;
   lender: string | null;
   notes: string | null;
+  currency: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -74,6 +75,7 @@ export async function createLoan(data: LoanInput) {
       startDate,
       lender,
       notes,
+      currency,
     } = validated.data;
 
     await prisma.loan.create({
@@ -90,8 +92,10 @@ export async function createLoan(data: LoanInput) {
         startDate: new Date(startDate),
         lender,
         notes,
+        currency,
       },
     });
+
 
     revalidatePath("/dashboard");
     revalidatePath("/loans");

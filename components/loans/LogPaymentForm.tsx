@@ -4,14 +4,16 @@ import { useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { recordPayment } from "@/app/actions/loan";
 import { Card } from "@/components/ui/Card";
+import { getCurrencyConfig } from "@/lib/calculations";
 
 type LogPaymentFormProps = {
   loanId: string;
   defaultAmount: number;
   loanName?: string;
+  currencyCode?: string;
 };
 
-export default function LogPaymentForm({ loanId, defaultAmount }: LogPaymentFormProps) {
+export default function LogPaymentForm({ loanId, defaultAmount, currencyCode = "INR" }: LogPaymentFormProps) {
   const [amount, setAmount] = useState(defaultAmount);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [type, setType] = useState<"EMI" | "PREPAYMENT">("EMI");
@@ -19,6 +21,8 @@ export default function LogPaymentForm({ loanId, defaultAmount }: LogPaymentForm
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const currencySymbol = getCurrencyConfig(currencyCode).symbol;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +99,7 @@ export default function LogPaymentForm({ loanId, defaultAmount }: LogPaymentForm
           </div>
 
           <div>
-            <label htmlFor="payment-amount" className="block text-[11px] font-medium text-amortix-slate mb-1">Amount (₹)</label>
+            <label htmlFor="payment-amount" className="block text-[11px] font-medium text-amortix-slate mb-1">Amount ({currencySymbol})</label>
             <input
               id="payment-amount"
               type="number"

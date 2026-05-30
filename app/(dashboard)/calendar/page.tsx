@@ -42,6 +42,11 @@ export default async function CalendarPage() {
     );
   }
 
+  const profile = await prisma.financialProfile.findUnique({
+    where: { userId: user.id },
+  });
+  const currencyCode = profile?.currency ?? "INR";
+
   const serializableLoans = loans.map((loan: {
     id: string;
     name: string;
@@ -66,5 +71,5 @@ export default async function CalendarPage() {
     }))
   }));
 
-  return <LoanCalendar loans={serializableLoans} initialMonth={new Date().toISOString().slice(0, 7)} />;
+  return <LoanCalendar loans={serializableLoans} initialMonth={new Date().toISOString().slice(0, 7)} currencyCode={currencyCode} />;
 }

@@ -6,7 +6,14 @@ import { AlertTriangle, ArrowRight, MessageSquarePlus, Sparkles } from "lucide-r
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { ChartContainer } from "@/components/ui/ChartContainer";
 import { motion, useReducedMotion } from "framer-motion";
-import { formatCurrency } from "@/lib/calculations/emi";
+import {
+  formatCurrency,
+  formatCompactCurrency,
+  calculateAffordabilityScore,
+  getAffordabilityZoneLabel,
+  calculateStrategy,
+  type StrategyLoanInput,
+} from "@/lib/calculations";
 import { fadeUpVariants, pageTransition, staggerContainer } from "@/lib/animations";
 import AffordabilityGauge from "@/components/dashboard/AffordabilityGauge";
 import LoanProgressBar from "@/components/dashboard/LoanProgressBar";
@@ -17,8 +24,6 @@ import InterestLeakDetector from "@/components/analysis/InterestLeakDetector";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { calculateAffordabilityScore, getAffordabilityZoneLabel } from "@/lib/calculations/affordability";
-import { calculateStrategy, type LoanInput as StrategyLoanInput } from "@/lib/calculations/strategies";
 
 type Loan = {
   id: string;
@@ -41,19 +46,12 @@ type DashboardHomeProps = {
     creditScoreRange?: string | null;
     hasEmergencyFund?: boolean | null;
     emergencyFundMonths?: number | null;
+    currency?: string | null;
   } | null;
   snapshots: HealthSnapshotPoint[];
 };
 
 const loanColors = ["#17314f", "#118c76", "#f59f3a", "#378ADD", "#d14d5b", "#64748b"];
-
-function formatCompactCurrency(amount: number): string {
-  if (amount === 0) return "₹0";
-  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
-  if (amount >= 100000) return `₹${Math.round(amount / 100000)}L`;
-  if (amount >= 1000) return `₹${Math.round(amount / 1000)}K`;
-  return `₹${amount.toLocaleString("en-IN")}`;
-}
 
 function scoreColor(score: number): "default" | "emerald" | "amber" | "red" {
   if (score >= 75) return "emerald";
@@ -67,6 +65,7 @@ function scoreZoneLabel(score: number): string {
 
 export default function DashboardHome({ loans, userName, profile, snapshots }: DashboardHomeProps) {
   const reduce = useReducedMotion();
+  const currencyCode = profile?.currency ?? "INR";
 
   const totalOutstanding = loans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
   const totalEMI = loans.reduce((sum, loan) => sum + loan.emiAmount, 0);
@@ -187,7 +186,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
 
   const heroStats = [
     { label: "Open loans", value: String(loans.length), muted: !hasLoans },
-    { label: "Total outstanding", value: formatCompactCurrency(totalOutstanding), muted: !hasLoans },
+    { label: "Total outstanding", value: formatCompactCurrency(totalOutstanding, currencyCode), muted: !hasLoans },
     { label: "Affordability score", value: hasAffordability ? `${affordabilityScore}/100` : "-", muted: !hasAffordability, color: hasAffordability && affordabilityScore !== null ? affordabilityScore >= 70 ? "text-emerald-500" : affordabilityScore >= 40 ? "text-amber-500" : "text-red-500" : "text-slate-400" },
     { label: "Monthly snapshots", value: String(snapshotCount), muted: snapshotCount === 0 },
   ];
@@ -237,14 +236,14 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
         <MetricCard
           label="Total outstanding"
-          value={formatCurrency(totalOutstanding)}
+          value={formatCurrency(totalOutstanding, currencyCode)}
           description="Across every active balance"
           valueColor={totalOutstanding > 0 ? "default" : "muted"}
           isEmpty={!hasLoans}
         />
         <MetricCard
           label="Monthly EMI"
-          value={formatCurrency(totalEMI)}
+          value={formatCurrency(totalEMI, currencyCode)}
           description="Your current recurring outflow"
           valueColor={totalEMI > 0 ? "default" : "muted"}
           isEmpty={!hasLoans}
@@ -320,8 +319,8 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
                           <span className="badge-slate">{loan.interestRate.toFixed(2)}%</span>
                         </div>
                         <div className="mb-3 flex items-center justify-between text-xs text-amortix-slate">
-                          <span>{formatCurrency(loan.outstandingBalance)} left</span>
-                          <span>{formatCurrency(loan.emiAmount)}/mo</span>
+                          <span>{formatCurrency(loan.outstandingBalance, currencyCode)} left</span>
+                          <span>{formatCurrency(loan.emiAmount, currencyCode)}/mo</span>
                         </div>
                         <LoanProgressBar value={paidPercentForLoan} color={color} />
                       </div>
@@ -377,7 +376,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-[11px] text-amortix-slate">Current monthly burn</span>
-                  <span className="num text-[11px] text-slate-600 font-medium">{formatCurrency(totalEMI)}</span>
+                  <span className="num text-[11px] text-slate-600 font-medium">{formatCurrency(totalEMI, currencyCode)}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-[11px] text-amortix-slate">Estimated payoff horizon</span>

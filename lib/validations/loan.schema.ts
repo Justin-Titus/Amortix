@@ -40,6 +40,8 @@ export const loanSchema = z.object({
   nextEmiDate: z.coerce.date().optional().nullable(),
   lender: z.string().max(100).optional().nullable(),
   notes: z.string().max(500).optional().nullable(),
+  currency: z.string().max(10).optional().default("INR"),
 });
 
 export type LoanInput = z.infer<typeof loanSchema>;
+

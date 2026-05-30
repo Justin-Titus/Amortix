@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { loanSchema, type LoanInput } from "@/lib/validations/loan.schema";
 import { createLoan } from "@/app/actions/loan";
-import { calculateEMI } from "@/lib/calculations/emi";
+import { calculateEMI, getCurrencyConfig } from "@/lib/calculations";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/CustomSelect";
@@ -33,17 +33,20 @@ export default function AddLoanForm({ onSuccess }: { onSuccess?: () => void }) {
     watch,
     setValue,
   } = useForm<LoanFormValues>({
-    resolver: zodResolver(loanFormSchema),
+    resolver: zodResolver(loanFormSchema) as any,
     defaultValues: {
       loanType: "PERSONAL",
       rateType: "FIXED",
       startDate: new Date().toISOString().split("T")[0],
+      currency: "INR",
     },
   });
 
   const principal = watch("principal");
   const interestRate = watch("interestRate");
   const tenureMonths = watch("tenureMonths");
+  const currency = watch("currency") || "INR";
+  const currencySymbol = getCurrencyConfig(currency).symbol;
 
   useEffect(() => {
     if (principal > 0 && interestRate > 0 && tenureMonths > 0) {
@@ -134,7 +137,30 @@ export default function AddLoanForm({ onSuccess }: { onSuccess?: () => void }) {
 
         <div>
           <label className="block text-sm font-medium text-[var(--color-navy)] mb-1.5">
-            Original Principal (₹)
+            Currency
+          </label>
+          <CustomSelect
+            value={watch("currency") || "INR"}
+            options={[
+              { value: "INR", label: "Indian Rupee (₹)" },
+              { value: "USD", label: "US Dollar ($)" },
+              { value: "EUR", label: "Euro (€)" },
+              { value: "GBP", label: "British Pound (£)" },
+              { value: "AED", label: "UAE Dirham (د.إ)" },
+              { value: "SGD", label: "Singapore Dollar (S$)" },
+              { value: "CAD", label: "Canadian Dollar (C$)" },
+              { value: "AUD", label: "Australian Dollar (A$)" },
+            ]}
+            onChange={(value) => setValue("currency", value, { shouldValidate: true, shouldDirty: true })}
+          />
+          {errors.currency && (
+            <p className="text-[var(--color-danger)] text-xs mt-1">{errors.currency.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-navy)] mb-1.5">
+            Original Principal ({currencySymbol})
           </label>
           <input
             type="number"
@@ -149,7 +175,7 @@ export default function AddLoanForm({ onSuccess }: { onSuccess?: () => void }) {
 
         <div>
           <label className="block text-sm font-medium text-[var(--color-navy)] mb-1.5">
-            Current Outstanding Balance (₹)
+            Current Outstanding Balance ({currencySymbol})
           </label>
           <input
             type="number"
@@ -214,7 +240,7 @@ export default function AddLoanForm({ onSuccess }: { onSuccess?: () => void }) {
 
         <div>
           <label className="block text-sm font-medium text-[var(--color-navy)] mb-1.5">
-            Monthly EMI (₹)
+            Monthly EMI ({currencySymbol})
           </label>
           <input
             type="number"

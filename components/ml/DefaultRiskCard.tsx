@@ -8,7 +8,7 @@ import {
   predictDefaultRisk,
   type DefaultRiskInput,
   type DefaultRiskResult,
-} from "@/lib/ml/default-risk";
+} from "@/lib/calculations";
 
 function riskColor(result: DefaultRiskResult): string {
   if (result.riskScore < 15) return "#059669";
@@ -24,9 +24,15 @@ function riskBadge(result: DefaultRiskResult): string {
   return "badge-red";
 }
 
-export default function DefaultRiskCard({ riskInput }: { riskInput: DefaultRiskInput }) {
+export default function DefaultRiskCard({
+  riskInput,
+  currencyCode = "INR",
+}: {
+  riskInput: DefaultRiskInput;
+  currencyCode?: string;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const risk = useMemo(() => predictDefaultRisk(riskInput), [riskInput]);
+  const risk = useMemo(() => predictDefaultRisk(riskInput, currencyCode), [riskInput, currencyCode]);
 
   return (
     <Card className="space-y-4 p-6">

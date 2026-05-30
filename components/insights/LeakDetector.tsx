@@ -1,13 +1,13 @@
 import { ShieldCheck, ShieldAlert, AlertTriangle } from "lucide-react";
-import { type InterestLeak } from "@/lib/analysis/interest-leak";
-import { formatCurrency } from "@/lib/calculations/emi";
+import { type InterestLeak, formatCurrency } from "@/lib/calculations";
 import { Card } from "@/components/ui/Card";
 
 interface LeakDetectorProps {
   leaks: InterestLeak[];
+  currencyCode?: string;
 }
 
-export function LeakDetector({ leaks }: LeakDetectorProps) {
+export function LeakDetector({ leaks, currencyCode = "INR" }: LeakDetectorProps) {
   return (
     <section id="interest-leaks" className="space-y-3 scroll-mt-24">
       <h2 className="text-lg font-heading font-medium text-amortix-navy">Interest leak priority</h2>
@@ -31,7 +31,7 @@ export function LeakDetector({ leaks }: LeakDetectorProps) {
                 </div>
                 <p className="mt-1 text-sm text-amortix-slate">{leak.fixDescription}</p>
               </div>
-              <p className="num text-lg font-medium text-amortix-navy">{formatCurrency(leak.annualLeakAmount)}</p>
+              <p className="num text-lg font-medium text-amortix-navy">{formatCurrency(leak.annualLeakAmount, currencyCode)}</p>
             </Card>
           ))}
         </div>

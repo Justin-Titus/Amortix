@@ -3,6 +3,11 @@
  * Standard reducing balance EMI formula
  */
 
+import { formatCurrency, formatINR, formatNumber } from "./currency";
+
+// Re-export currency helpers for backward compatibility
+export { formatCurrency, formatINR, formatNumber };
+
 /** Calculate monthly EMI using the standard reducing balance formula */
 export function calculateEMI(
   principal: number,
@@ -26,10 +31,11 @@ export function calculateEMI(
   const n = tenureMonths;
 
   if (annualRate === 0) {
-    return principal / tenureMonths;
+    return Math.round(principal / tenureMonths);
   }
 
-  return (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  const emi = (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  return Math.round(emi);
 }
 
 /** Calculate total interest paid over the loan tenure */
@@ -46,36 +52,32 @@ export function totalAmount(emi: number, tenureMonths: number): number {
   return emi * tenureMonths;
 }
 
-type CurrencyFormatOptions = {
-  compact?: boolean;
-};
-
-/** Format a number as Indian Rupee currency */
-export function formatCurrency(amount: number, options: CurrencyFormatOptions = {}): string {
-  const compact = options.compact ?? false;
-  const abs = Math.abs(amount);
-  const sign = amount < 0 ? "-" : "";
-
-  if (compact) {
-    if (abs >= 10000000) return `${sign}₹${(abs / 10000000).toFixed(1)}Cr`;
-    if (abs >= 100000) return `${sign}₹${Math.round(abs / 100000)}L`;
-    if (abs >= 1000) return `${sign}₹${Math.round(abs / 1000)}K`;
-  }
-
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(abs).replace("₹", `${sign}₹`);
+/** Backward-compatible function name from mobile */
+export function calculateTotalInterest(
+  principal: number,
+  emiAmount: number,
+  tenureMonths: number
+): number {
+  return emiAmount * tenureMonths - principal;
 }
 
-/** Backward-compatible alias for compact INR formatting */
-export function formatINR(amount: number, compact = false): string {
-  return formatCurrency(amount, { compact });
+/** Calculate remaining tenure given principal, rate and desired EMI */
+export function calculateTenure(
+  principal: number,
+  annualRate: number,
+  emiAmount: number
+): number {
+  if (annualRate === 0) return Math.round(principal / emiAmount);
+  const monthlyRate = annualRate / 12 / 100;
+  
+  // Basic sanity check: EMI must be greater than monthly interest
+  if (emiAmount <= principal * monthlyRate) return 0;
+
+  const tenure = Math.log(emiAmount / (emiAmount - principal * monthlyRate)) / Math.log(1 + monthlyRate);
+  return Math.round(tenure);
 }
 
-/** Format a number with commas (Indian number system) */
-export function formatNumber(num: number): string {
-  return new Intl.NumberFormat("en-IN").format(Math.round(num));
+/** Backward-compatible function from mobile */
+export function formatCompactCurrency(amount: number, currencyCode: string = "INR"): string {
+  return formatCurrency(amount, currencyCode, { compact: true });
 }

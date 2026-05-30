@@ -5,7 +5,7 @@ import { useForm, type Resolver, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loanSchema, type LoanInput } from "@/lib/validations/loan.schema";
 import { updateLoan } from "@/app/actions/loan";
-import { calculateEMI } from "@/lib/calculations/emi";
+import { calculateEMI, getCurrencyConfig } from "@/lib/calculations";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/CustomSelect";
@@ -30,6 +30,7 @@ type EditLoanFormProps = {
     startDate: Date | string;
     lender?: string | null;
     notes?: string | null;
+    currency?: string;
   };
   onSuccess?: () => void;
 };
@@ -47,7 +48,7 @@ export default function EditLoanForm({ loanId, initialData, onSuccess }: EditLoa
     getValues,
     setValue,
   } = useForm<LoanFormValues>({
-    resolver: zodResolver(loanSchema) as unknown as Resolver<LoanFormValues>,
+    resolver: zodResolver(loanSchema) as any,
     defaultValues: {
       name: initialData.name,
       loanType: initialData.loanType,
@@ -60,12 +61,15 @@ export default function EditLoanForm({ loanId, initialData, onSuccess }: EditLoa
       startDate: new Date(initialData.startDate).toISOString().split("T")[0],
       lender: initialData.lender || "",
       notes: initialData.notes || "",
+      currency: initialData.currency || "INR",
     },
   });
 
   const principal = watch("principal");
   const interestRate = watch("interestRate");
   const tenureMonths = watch("tenureMonths");
+  const currency = watch("currency") || "INR";
+  const currencySymbol = getCurrencyConfig(currency).symbol;
 
   useEffect(() => {
     if (principal > 0 && interestRate > 0 && tenureMonths > 0) {
@@ -144,7 +148,30 @@ export default function EditLoanForm({ loanId, initialData, onSuccess }: EditLoa
 
         <div>
           <label className="block text-sm font-medium text-amortix-navy mb-1.5">
-            Original Principal (₹)
+            Currency
+          </label>
+          <CustomSelect
+            value={watch("currency") || "INR"}
+            options={[
+              { value: "INR", label: "Indian Rupee (₹)" },
+              { value: "USD", label: "US Dollar ($)" },
+              { value: "EUR", label: "Euro (€)" },
+              { value: "GBP", label: "British Pound (£)" },
+              { value: "AED", label: "UAE Dirham (د.إ)" },
+              { value: "SGD", label: "Singapore Dollar (S$)" },
+              { value: "CAD", label: "Canadian Dollar (C$)" },
+              { value: "AUD", label: "Australian Dollar (A$)" },
+            ]}
+            onChange={(val) => setValue("currency", val, { shouldValidate: true, shouldDirty: true })}
+          />
+          {errors.currency && (
+            <p className="text-[var(--color-danger)] text-xs mt-1">{errors.currency.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-amortix-navy mb-1.5">
+            Original Principal ({currencySymbol})
           </label>
           <input
             type="number"
@@ -159,7 +186,7 @@ export default function EditLoanForm({ loanId, initialData, onSuccess }: EditLoa
 
         <div>
           <label className="block text-sm font-medium text-amortix-navy mb-1.5">
-            Current Outstanding Balance (₹)
+            Current Outstanding Balance ({currencySymbol})
           </label>
           <input
             type="number"
@@ -224,7 +251,7 @@ export default function EditLoanForm({ loanId, initialData, onSuccess }: EditLoa
 
         <div>
           <label className="block text-sm font-medium text-amortix-navy mb-1.5">
-            Monthly EMI (₹)
+            Monthly EMI ({currencySymbol})
           </label>
           <input
             type="number"

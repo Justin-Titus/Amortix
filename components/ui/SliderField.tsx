@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useId } from "react";
-import { formatCurrency } from "@/lib/calculations/emi";
+import { formatCurrency } from "@/lib/calculations";
 
 type SliderFieldProps = {
   label: string;
@@ -11,6 +11,7 @@ type SliderFieldProps = {
   step: number;
   displayValue: string;
   onChange: (value: number) => void;
+  currencyCode?: string;
 };
 
 export default function SliderField({
@@ -21,6 +22,7 @@ export default function SliderField({
   step,
   displayValue,
   onChange,
+  currencyCode = "INR",
 }: SliderFieldProps) {
   const id = useId();
   const progress = Math.round(((value - min) / (max - min)) * 100);
@@ -48,8 +50,8 @@ export default function SliderField({
       />
 
       <div className="mt-2 flex justify-between text-[11px] text-slate-400">
-        <span>{min >= 1000 ? formatCurrency(min) : min}</span>
-        <span>{max >= 1000 ? formatCurrency(max) : max}</span>
+        <span>{min >= 1000 ? formatCurrency(min, currencyCode) : min}</span>
+        <span>{max >= 1000 ? formatCurrency(max, currencyCode) : max}</span>
       </div>
     </div>
   );

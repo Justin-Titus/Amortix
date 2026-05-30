@@ -1,11 +1,12 @@
 import { getLoans } from "@/app/actions/loan";
-import type { LoanInput } from "@/lib/calculations/strategies";
+import { buildLoanHeroStats, type LoanSummaryInput, type StrategyLoanInput } from "@/lib/calculations";
 import StrategyComparison from "@/components/strategy/StrategyComparison";
-import { buildLoanHeroStats, type LoanSummaryInput } from "@/lib/calculations/loan-summary";
 import { BarChart3, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageWrapper } from "@/components/layout/PageWrapper";
+import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "Repayment Strategy ",
@@ -15,14 +16,20 @@ export const metadata = {
 export default async function StrategyPage() {
   const userLoans = await getLoans();
 
-  const pageHeroStats = buildLoanHeroStats(userLoans as LoanSummaryInput[]);
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const profile = user ? await prisma.financialProfile.findUnique({ where: { userId: user.id } }) : null;
+  const currencyCode = profile?.currency ?? "INR";
 
-  const mappedLoans: LoanInput[] = userLoans.map((loan) => ({
+  const pageHeroStats = buildLoanHeroStats(userLoans as LoanSummaryInput[], currencyCode);
+
+  const mappedLoans: StrategyLoanInput[] = userLoans.map((loan) => ({
     id: loan.id,
     name: loan.name,
     outstanding: loan.outstandingBalance,
     annualRate: loan.interestRate,
     emi: loan.emiAmount,
+    currency: loan.currency ?? currencyCode,
   }));
 
   return (
@@ -59,7 +66,7 @@ export default async function StrategyPage() {
           />
         </div>
       ) : (
-        <StrategyComparison loans={mappedLoans} />
+        <StrategyComparison loans={mappedLoans} currencyCode={currencyCode} />
       )}
     </PageWrapper>
   );

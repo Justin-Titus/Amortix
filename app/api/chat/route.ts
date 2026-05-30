@@ -1,6 +1,6 @@
 import { convertToModelMessages, type UIMessage } from "ai";
 import { streamAIChat } from "@/lib/ai";
-import { formatCurrency } from "@/lib/calculations/emi";
+import { formatCurrency } from "@/lib/calculations";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logInfo, logWarn, reportError } from "@/lib/logger";
@@ -14,6 +14,7 @@ type ChatLoan = {
   emiAmount: number;
   interestRate: number;
   rateType: "FIXED" | "FLOATING";
+  currency: string;
 };
 
 async function buildFinancialContext(userId: string) {
@@ -27,6 +28,7 @@ async function buildFinancialContext(userId: string) {
     }),
   ]);
   const loans = loansResult as ChatLoan[];
+  const currencyCode = financialProfile?.currency ?? "INR";
 
   const contextParts: string[] = [];
 
@@ -40,15 +42,17 @@ async function buildFinancialContext(userId: string) {
       .map(
         (loan: ChatLoan) =>
           `- ${loan.name} (${loan.loanType}): Balance ${formatCurrency(
-            loan.outstandingBalance
-          )}, EMI ${formatCurrency(loan.emiAmount)}, Interest ${loan.interestRate}% (${loan.rateType})`
+            loan.outstandingBalance,
+            loan.currency ?? currencyCode
+          )}, EMI ${formatCurrency(loan.emiAmount, loan.currency ?? currencyCode)}, Interest ${loan.interestRate}% (${loan.rateType})`
       )
       .join("\n");
 
     contextParts.push(
       `Loans: ${loans.length} active loans. Total Outstanding Debt ${formatCurrency(
-        totalOutstanding
-      )}. Total Monthly EMI ${formatCurrency(totalEMI)}.`,
+        totalOutstanding,
+        currencyCode
+      )}. Total Monthly EMI ${formatCurrency(totalEMI, currencyCode)}.`,
       `Loan Details:\n${loansText}`
     );
   }
@@ -59,10 +63,12 @@ async function buildFinancialContext(userId: string) {
     const monthlySurplus = financialProfile.monthlyIncome - financialProfile.monthlyExpenses;
     contextParts.push(
       `Financial Profile: Monthly Income ${formatCurrency(
-        financialProfile.monthlyIncome
+        financialProfile.monthlyIncome,
+        currencyCode
       )}, Monthly Expenses ${formatCurrency(
-        financialProfile.monthlyExpenses
-      )}, Monthly Surplus ${formatCurrency(monthlySurplus)}, Employment ${
+        financialProfile.monthlyExpenses,
+        currencyCode
+      )}, Monthly Surplus ${formatCurrency(monthlySurplus, currencyCode)}, Employment ${
         financialProfile.employmentType
       }, Credit Score Range ${financialProfile.creditScoreRange}, Emergency Fund ${
         financialProfile.hasEmergencyFund ? "Yes" : "No"

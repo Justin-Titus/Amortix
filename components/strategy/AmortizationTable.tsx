@@ -1,15 +1,15 @@
-import type { MonthlyAllocation } from "@/lib/calculations/strategies";
-import { formatCurrency } from "@/lib/calculations/emi";
+import { type MonthlyAllocation, formatCurrency } from "@/lib/calculations";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 interface AmortizationTableProps {
   schedule: MonthlyAllocation[];
+  currencyCode?: string;
 }
 
 const ZERO_EPSILON = 1e-6;
 
-export default function AmortizationTable({ schedule }: AmortizationTableProps) {
+export default function AmortizationTable({ schedule, currencyCode = "INR" }: AmortizationTableProps) {
   const handleExportCSV = () => {
     // Generate CSV data from schedule
     const headers = ["Month", "Total Remaining", ...schedule[0]?.allocations.flatMap(a => [
@@ -57,11 +57,11 @@ export default function AmortizationTable({ schedule }: AmortizationTableProps) 
     const rows = schedule.map(month => {
       const rowData = [
         month.month.toString(),
-        formatCurrency(month.totalDebtRemaining),
+        formatCurrency(month.totalDebtRemaining, currencyCode),
       ];
 
       month.allocations.forEach(a => {
-        rowData.push(`Pay: ${formatCurrency(a.payment)}\nPrin: ${formatCurrency(a.principal)}\nInt: ${formatCurrency(a.interest)}\nBal: ${formatCurrency(a.remainingBalance)}`);
+        rowData.push(`Pay: ${formatCurrency(a.payment, currencyCode)}\nPrin: ${formatCurrency(a.principal, currencyCode)}\nInt: ${formatCurrency(a.interest, currencyCode)}\nBal: ${formatCurrency(a.remainingBalance, currencyCode)}`);
       });
 
       return rowData;
@@ -132,21 +132,21 @@ export default function AmortizationTable({ schedule }: AmortizationTableProps) 
                 <td className="px-4 py-3 border-r border-[var(--color-border)] font-medium text-[var(--color-navy)]">
                   {row.month}
                 </td>
-                <td className="px-4 py-3 border-r border-[var(--color-border)] font-currency font-medium text-[var(--color-navy)]">
-                  {formatCurrency(row.totalDebtRemaining)}
+                 <td className="px-4 py-3 border-r border-[var(--color-border)] font-currency font-medium text-[var(--color-navy)]">
+                  {formatCurrency(row.totalDebtRemaining, currencyCode)}
                 </td>
                 {row.allocations.flatMap((a) => [
                   <td key={`${row.month}-${a.loanId}-pay`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-navy)]">
-                    {formatCurrency(a.payment)}
+                    {formatCurrency(a.payment, currencyCode)}
                   </td>,
                   <td key={`${row.month}-${a.loanId}-prin`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-emerald)]">
-                    {formatCurrency(a.principal)}
+                    {formatCurrency(a.principal, currencyCode)}
                   </td>,
                   <td key={`${row.month}-${a.loanId}-int`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-amber)]">
-                    {formatCurrency(a.interest)}
+                    {formatCurrency(a.interest, currencyCode)}
                   </td>,
                   <td key={`${row.month}-${a.loanId}-bal`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-slate)]">
-                    {formatCurrency(a.remainingBalance)}
+                    {formatCurrency(a.remainingBalance, currencyCode)}
                   </td>,
                 ])}
               </tr>

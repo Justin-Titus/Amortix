@@ -1,6 +1,5 @@
 /**
  * Affordability & Risk Score Calculator
- * Score formula from PLAN.md Section 7.9
  */
 
 export interface AffordabilityInput {
@@ -155,7 +154,8 @@ export function calculateAffordabilityScore(
   // --- Credit Score Bonus ---
   if (
     input.creditScoreRange === "750–800" ||
-    input.creditScoreRange === "800+"
+    input.creditScoreRange === "800+" ||
+    input.creditScoreRange === "750-800"
   ) {
     score += 5;
     breakdown.push({

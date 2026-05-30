@@ -2,28 +2,22 @@
 
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
-import { detectInterestLeaks, type FinancialProfileInput, type LoanInput } from "@/lib/analysis/interest-leak";
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+import { detectInterestLeaks, formatCurrency, type FinancialProfileInput, type LoanInput } from "@/lib/calculations";
 
 export default function InterestLeakDetector({
   loans,
   profile,
+  currencyCode = "INR",
 }: {
   loans: LoanInput[];
   profile: FinancialProfileInput | null;
+  currencyCode?: string;
 }) {
   if (!profile || loans.length === 0) {
     return null;
   }
 
-  const leaks = detectInterestLeaks(loans, profile);
+  const leaks = detectInterestLeaks(loans, profile, currencyCode);
 
   if (leaks.length === 0) {
     return null;
@@ -37,7 +31,7 @@ export default function InterestLeakDetector({
         <div className="flex items-center gap-2 text-sm text-amber-900">
           <AlertTriangle className="h-4 w-4" />
           <span>
-            We found {leaks.length} interest leak{leaks.length === 1 ? "" : "s"} costing you {formatCurrency(totalAnnualLeak)}/year.
+            We found {leaks.length} interest leak{leaks.length === 1 ? "" : "s"} costing you {formatCurrency(totalAnnualLeak, currencyCode)}/year.
           </span>
         </div>
         <Link href="/insights" className="text-xs font-semibold text-amber-800 hover:text-amber-900">

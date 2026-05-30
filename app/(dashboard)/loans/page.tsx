@@ -1,11 +1,13 @@
 import { getLoans } from "@/app/actions/loan";
-import { formatCurrency } from "@/lib/calculations/emi";
+import { formatCurrency } from "@/lib/calculations";
 import { Plus, Info, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { PageHero } from "@/components/layout/PageHero";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { buildLoanPath } from "@/lib/loans/url";
+import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "My Loans ",
@@ -14,6 +16,11 @@ export const metadata = {
 
 export default async function LoansPage() {
   const loans = await getLoans();
+  
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const profile = user ? await prisma.financialProfile.findUnique({ where: { userId: user.id } }) : null;
+  const currencyCode = profile?.currency ?? "INR";
 
   const totalOutstanding = loans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
   const totalEMI = loans.reduce((sum, loan) => sum + loan.emiAmount, 0);
@@ -46,13 +53,13 @@ export default async function LoansPage() {
         />
         <MetricCard
           label="Outstanding"
-          value={formatCurrency(totalOutstanding)}
+          value={formatCurrency(totalOutstanding, currencyCode)}
           description="Total remaining balance"
           isEmpty={loans.length === 0}
         />
         <MetricCard
           label="Monthly EMI"
-          value={formatCurrency(totalEMI)}
+          value={formatCurrency(totalEMI, currencyCode)}
           description="Estimated recurring payment"
           isEmpty={loans.length === 0}
         />
@@ -63,6 +70,7 @@ export default async function LoansPage() {
           isEmpty={loans.length === 0}
         />
       </div>
+
 
       {loans.length === 0 ? (
         <div className="bg-white border border-[#E2E8F0] rounded-2xl">
@@ -145,7 +153,7 @@ export default async function LoansPage() {
                   <div className="grid gap-4 text-sm text-slate-600 sm:grid-cols-2">
                     <div>
                       <p className="text-[11px] text-slate-400">Outstanding</p>
-                      <p className="mt-1 font-mono font-medium text-[#0D1F3C]">{formatCurrency(loan.outstandingBalance)}</p>
+                      <p className="mt-1 font-mono font-medium text-[#0D1F3C]">{formatCurrency(loan.outstandingBalance, loan.currency ?? currencyCode)}</p>
                     </div>
                     <div>
                       <p className="text-[11px] text-slate-400">Rate</p>
@@ -153,7 +161,7 @@ export default async function LoansPage() {
                     </div>
                     <div>
                       <p className="text-[11px] text-slate-400">Monthly EMI</p>
-                      <p className="mt-1 font-mono font-medium text-[#0D1F3C]">{formatCurrency(loan.emiAmount)}</p>
+                      <p className="mt-1 font-mono font-medium text-[#0D1F3C]">{formatCurrency(loan.emiAmount, loan.currency ?? currencyCode)}</p>
                     </div>
                   </div>
                 </Link>

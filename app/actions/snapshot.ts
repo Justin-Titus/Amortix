@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { calculateAffordabilityScore } from "@/lib/calculations/affordability";
+import { calculateAffordabilityScore } from "@/lib/calculations";
 import { reportError } from "@/lib/logger";
 
 type SnapshotLoan = {

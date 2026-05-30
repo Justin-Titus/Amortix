@@ -3,7 +3,7 @@
  * Avalanche, Snowball, and Hybrid strategies
  */
 
-export interface LoanInput {
+export interface StrategyLoanInput {
   id: string;
   name: string;
   outstanding: number;
@@ -38,7 +38,7 @@ export interface StrategyResult {
  * Calculate the "minimum payment only" baseline for comparison
  */
 export function calculateMinimumPaymentBaseline(
-  loans: LoanInput[]
+  loans: StrategyLoanInput[]
 ): { totalInterest: number; months: number } {
   const activeLoans = loans.map((loan) => ({ ...loan, outstanding: loan.outstanding }));
   let totalInterest = 0;
@@ -71,7 +71,7 @@ export function calculateMinimumPaymentBaseline(
  * Calculate a specific debt repayment strategy
  */
 export function calculateStrategy(
-  loans: LoanInput[],
+  loans: StrategyLoanInput[],
   extraMonthlyBudget: number,
   strategy: "avalanche" | "snowball" | "hybrid",
   oneTimePayment: number = 0
@@ -80,7 +80,7 @@ export function calculateStrategy(
 }
 
 function runStrategy(
-  inputLoans: LoanInput[],
+  inputLoans: StrategyLoanInput[],
   extraBudget: number,
   strategy: "avalanche" | "snowball" | "hybrid",
   oneTimePayment: number = 0
@@ -214,7 +214,7 @@ function runStrategy(
  * Calculate all three strategies at once for comparison
  */
 export function compareAllStrategies(
-  loans: LoanInput[],
+  loans: StrategyLoanInput[],
   extraMonthlyBudget: number,
   oneTimePayment: number = 0
 ): {

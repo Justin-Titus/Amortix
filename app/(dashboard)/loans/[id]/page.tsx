@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { formatCurrency } from "@/lib/calculations/emi";
+import { formatCurrency, loanHealthScore, getCurrencyConfig } from "@/lib/calculations";
 import LoanActions from "@/components/loans/LoanActions";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Building2, Receipt, Percent, History } from "lucide-react";
@@ -8,7 +8,6 @@ import { prisma } from "@/lib/prisma";
 import DefaultRiskCard from "@/components/ml/DefaultRiskCard";
 import LoanHealthScoreBadge from "@/components/analysis/LoanHealthScoreBadge";
 import PrepaymentSimulator from "@/components/analysis/PrepaymentSimulator";
-import { loanHealthScore } from "@/lib/analysis/loan-health";
 import type { FinancialProfileInput } from "@/lib/validations/profile.schema";
 import LogPaymentForm from "@/components/loans/LogPaymentForm";
 import { slugifyLoanName } from "@/lib/loans/url";
@@ -76,6 +75,8 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
       console.error("Failed to load loan detail context:", error);
     }
   }
+
+  const currencyCode = loan.currency ?? profile?.currency ?? "INR";
 
   const paidAmount = loan.principal - loan.outstandingBalance;
   const paidPercent = Math.max(0, Math.min(100, (paidAmount / Math.max(loan.principal, 1)) * 100));
@@ -151,10 +152,10 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
 
           <div className="section-block min-w-60 bg-amortix-frost p-5 xl:justify-self-end">
             <p className="text-xs font-medium uppercase tracking-wider text-amortix-slate">Outstanding Balance</p>
-            <p className="mt-2 text-3xl font-heading font-medium text-amortix-navy">{formatCurrency(loan.outstandingBalance)}</p>
+            <p className="mt-2 text-3xl font-heading font-medium text-amortix-navy">{formatCurrency(loan.outstandingBalance, currencyCode)}</p>
             <div className="mt-4 border-t border-amortix-border-light pt-4">
               <div className="mb-2 flex justify-between text-[11px] text-amortix-slate">
-                <span>Paid: {formatCurrency(paidAmount)}</span>
+                <span>Paid: {formatCurrency(paidAmount, currencyCode)}</span>
                 <span>{paidPercent.toFixed(1)}%</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-white">
@@ -175,11 +176,11 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
             <h3 className="text-sm font-medium uppercase tracking-wider">EMI Details</h3>
           </div>
           <p className="pb-1 text-2xl font-mono text-amortix-navy">
-            {formatCurrency(loan.emiAmount)}
+            {formatCurrency(loan.emiAmount, currencyCode)}
             <span className="text-sm font-sans text-amortix-slate">/mo</span>
           </p>
           <p className="mt-3 border-t border-amortix-border-light pt-3 text-sm text-amortix-slate">
-            Principal: {formatCurrency(loan.principal)}
+            Principal: {formatCurrency(loan.principal, currencyCode)}
           </p>
         </div>
 
@@ -203,14 +204,14 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
             {loan.tenureMonths} <span className="text-sm font-sans text-amortix-slate">months</span>
           </p>
           <p className="mt-3 border-t border-amortix-border-light pt-3 text-sm text-amortix-slate">
-            Started: {new Date(loan.startDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+            Started: {new Date(loan.startDate).toLocaleDateString(getCurrencyConfig(currencyCode).locale, { month: "short", year: "numeric" })}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_350px]">
         <div className="space-y-8">
-          {riskInput ? <DefaultRiskCard riskInput={riskInput} /> : null}
+          {riskInput ? <DefaultRiskCard riskInput={riskInput} currencyCode={currencyCode} /> : null}
 
           <div className="space-y-3">
             <h2 className="text-sm font-medium uppercase tracking-wider text-amortix-slate">Prepayment Impact Simulator</h2>
@@ -219,6 +220,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
               interestRate={loan.interestRate}
               tenureMonths={loan.tenureMonths}
               emiAmount={loan.emiAmount}
+              currencyCode={currencyCode}
             />
           </div>
 
@@ -246,7 +248,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
                     {loan.payments.map((payment) => (
                       <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 text-amortix-slate">
-                          {new Date(payment.paymentDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                          {new Date(payment.paymentDate).toLocaleDateString(getCurrencyConfig(currencyCode).locale, { day: "numeric", month: "short", year: "numeric" })}
                         </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${
@@ -258,7 +260,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
                           </span>
                         </td>
                         <td className="px-6 py-4 font-mono font-medium text-amortix-navy">
-                          {formatCurrency(payment.amount)}
+                          {formatCurrency(payment.amount, currencyCode)}
                         </td>
                       </tr>
                     ))}
@@ -270,7 +272,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         <div className="space-y-5">
-          <LogPaymentForm loanId={loan.id} defaultAmount={loan.emiAmount} loanName={loan.name} />
+          <LogPaymentForm loanId={loan.id} defaultAmount={loan.emiAmount} loanName={loan.name} currencyCode={currencyCode} />
           
           <div className="glass-panel p-5 bg-amortix-frost">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-amortix-navy mb-3">Balance Management</h3>

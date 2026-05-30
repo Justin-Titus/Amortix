@@ -1,5 +1,5 @@
-﻿import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
+import { cookies, headers } from 'next/headers'
 
 type CookieOptions = {
   domain?: string;
@@ -13,6 +13,8 @@ type CookieOptions = {
 
 export async function createClient() {
   const cookieStore = await cookies()
+  const headerStore = await headers()
+  const authHeader = headerStore.get('authorization')
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,6 +35,9 @@ export async function createClient() {
             // user sessions.
           }
         },
+      },
+      global: {
+        headers: authHeader ? { Authorization: authHeader } : undefined,
       },
     }
   )

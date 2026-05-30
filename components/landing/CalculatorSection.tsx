@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import Accordion from "@/components/ui/Accordion";
 import SliderField from "@/components/ui/SliderField";
-import { calculateEMI, formatCurrency, totalInterest } from "@/lib/calculations/emi";
-import { generateAmortizationSchedule } from "@/lib/calculations/amortization";
+import { calculateEMI, formatCurrency, totalInterest, generateAmortizationSchedule } from "@/lib/calculations";
 
 const presets = [
   { label: "Home", principal: 3500000, rate: 8.4, tenure: 240 },

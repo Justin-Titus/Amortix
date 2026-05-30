@@ -27,10 +27,14 @@ import {
   YAxis,
 } from "recharts";
 import { ChartContainer } from "@/components/ui/ChartContainer";
-import { compareAllStrategies, type LoanInput } from "@/lib/calculations/strategies";
-
-import { calculateAffordabilityScore } from "@/lib/calculations/affordability";
-import { formatCurrency } from "@/lib/calculations/emi";
+import {
+  compareAllStrategies,
+  calculateAffordabilityScore,
+  formatCurrency,
+  formatCompactCurrency,
+  getCurrencyConfig,
+  type StrategyLoanInput,
+} from "@/lib/calculations";
 import { fadeUpVariants, pageTransition, staggerContainer } from "@/lib/animations";
 import AffordabilityGauge from "@/components/dashboard/AffordabilityGauge";
 
@@ -41,6 +45,7 @@ type FinancialProfile = {
   hasEmergencyFund?: boolean | null;
   emergencyFundMonths?: number | null;
   employmentType?: string | null;
+  currency?: string | null;
 } | null;
 
 type LiveStrategyModelerProps = {
@@ -57,6 +62,7 @@ type LiveStrategyModelerProps = {
   }>;
   profile: FinancialProfile;
   userName: string;
+  currencyCode?: string;
 };
 
 type StrategyKey = "avalanche" | "snowball" | "hybrid";
@@ -91,12 +97,14 @@ function buildSummary(input: {
   bestStrategyLabel: string;
   totalEMI: number;
   totalOutstanding: number;
+  currencyCode?: string;
 }) {
   const parts: string[] = [];
+  const currencyCode = input.currencyCode ?? "INR";
 
   if (input.savedInterest > 0) {
     parts.push(
-      `${strategyPalette[input.selectedStrategy].name} is currently saving ${formatCurrency(input.savedInterest)} versus minimum payments.`
+      `${strategyPalette[input.selectedStrategy].name} is currently saving ${formatCurrency(input.savedInterest, currencyCode)} versus minimum payments.`
     );
   }
 
@@ -106,7 +114,7 @@ function buildSummary(input: {
 
   if (input.extraMonthlyPayment > 0 || input.oneTimePayment > 0) {
     parts.push(
-      `Your scenario includes ${formatCurrency(input.extraMonthlyPayment)} extra per month${input.oneTimePayment > 0 ? ` and a one-time ${formatCurrency(input.oneTimePayment)} prepayment` : ""}.`
+      `Your scenario includes ${formatCurrency(input.extraMonthlyPayment, currencyCode)} extra per month${input.oneTimePayment > 0 ? ` and a one-time ${formatCurrency(input.oneTimePayment, currencyCode)} prepayment` : ""}.`
     );
   }
 
@@ -124,7 +132,7 @@ function buildSummary(input: {
 
   if (input.totalOutstanding > 0) {
     parts.push(
-      `You are managing ${formatCurrency(input.totalOutstanding)} across ${formatCurrency(input.totalEMI)} in monthly EMIs.`
+      `You are managing ${formatCurrency(input.totalOutstanding, currencyCode)} across ${formatCurrency(input.totalEMI, currencyCode)} in monthly EMIs.`
     );
   }
 
@@ -135,19 +143,20 @@ function formatShortMonth(index: number) {
   return `M${index}`;
 }
 
-function formatTooltipValue(value: string | number | readonly (string | number)[] | undefined) {
+function formatTooltipValue(value: string | number | readonly (string | number)[] | undefined, currencyCode: string = "INR") {
   const normalized = Array.isArray(value) ? value[0] : value;
-  return formatCurrency(Number(normalized ?? 0));
+  return formatCurrency(Number(normalized ?? 0), currencyCode);
 }
 
-export default function LiveStrategyModeler({ loans, profile, userName }: LiveStrategyModelerProps) {
+export default function LiveStrategyModeler({ loans, profile, userName, currencyCode: propCurrencyCode }: LiveStrategyModelerProps) {
   const reduce = useReducedMotion();
+  const currencyCode = propCurrencyCode ?? profile?.currency ?? "INR";
   const [extraMonthlyPayment, setExtraMonthlyPayment] = useState(0);
   const [oneTimePayment, setOneTimePayment] = useState(0);
   const [selectedStrategy, setSelectedStrategy] = useState<StrategyKey>("avalanche");
   const firstName = userName.trim().split(" ")[0] || "there";
 
-  const loanInputs = useMemo<LoanInput[]>(
+  const loanInputs = useMemo<StrategyLoanInput[]>(
     () =>
       loans.map((loan) => ({
         id: loan.id,
@@ -217,8 +226,9 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
         bestStrategyLabel: strategyPalette[bestStrategy.strategy].name,
         totalEMI,
         totalOutstanding,
+        currencyCode,
       }),
-    [affordability, bestStrategy.strategy, extraMonthlyPayment, oneTimePayment, results.baseline.months, selectedResult.monthsToPayoff, selectedResult.totalSavedVsMinimum, selectedStrategy, totalEMI, totalOutstanding]
+    [affordability, bestStrategy.strategy, extraMonthlyPayment, oneTimePayment, results.baseline.months, selectedResult.monthsToPayoff, selectedResult.totalSavedVsMinimum, selectedStrategy, totalEMI, totalOutstanding, currencyCode]
   );
 
   if (loans.length === 0) {
@@ -272,7 +282,7 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
                   }`}
                 >
                   <span className="font-medium">{preset.label}</span>
-                  <span className="text-[11px]">{formatCurrency(preset.extraMonthly)}</span>
+                  <span className="text-[11px]">{formatCurrency(preset.extraMonthly, currencyCode)}</span>
                 </button>
               ))}
             </div>
@@ -280,7 +290,7 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
             <div>
               <label className="mb-2 flex items-center justify-between text-sm font-medium text-amortix-navy">
                 <span>Extra monthly payment</span>
-                <span className="num text-amortix-emerald">{formatCurrency(extraMonthlyPayment)}</span>
+                <span className="num text-amortix-emerald">{formatCurrency(extraMonthlyPayment, currencyCode)}</span>
               </label>
               <input
                 type="range"
@@ -292,15 +302,15 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
                 className="w-full accent-amortix-emerald"
               />
               <div className="mt-1 flex items-center justify-between text-[10px] text-amortix-text-muted">
-                <span>₹0</span>
-                <span>₹50k</span>
+                <span>{formatCompactCurrency(0, currencyCode)}</span>
+                <span>{formatCompactCurrency(50000, currencyCode)}</span>
               </div>
             </div>
 
             <div>
               <label className="mb-2 flex items-center justify-between text-sm font-medium text-amortix-navy">
                 <span>One-time prepayment</span>
-                <span className="num text-amortix-amber">{formatCurrency(oneTimePayment)}</span>
+                <span className="num text-amortix-amber">{formatCurrency(oneTimePayment, currencyCode)}</span>
               </label>
               <input
                 type="range"
@@ -312,8 +322,8 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
                 className="w-full accent-amortix-amber"
               />
               <div className="mt-1 flex items-center justify-between text-[10px] text-amortix-text-muted">
-                <span>₹0</span>
-                <span>₹2.5L</span>
+                <span>{formatCompactCurrency(0, currencyCode)}</span>
+                <span>{formatCompactCurrency(250000, currencyCode)}</span>
               </div>
             </div>
           </motion.div>
@@ -359,7 +369,7 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
             <div className="metric-card border-l-4 border-l-amortix-emerald min-h-20">
               <p className="text-xs text-amortix-slate">Selected interest saved</p>
               <p className={`num mt-1 text-[20px] font-medium ${selectedResult.totalSavedVsMinimum > 0 ? "text-amortix-navy" : "text-slate-400"}`}>
-                {formatCurrency(Math.max(0, selectedResult.totalSavedVsMinimum))}
+                {formatCurrency(Math.max(0, selectedResult.totalSavedVsMinimum), currencyCode)}
               </p>
             </div>
             <div className="metric-card border-l-4 border-l-amortix-amber min-h-20">
@@ -371,7 +381,7 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
             <div className="metric-card border-l-4 border-l-amortix-navy-mid min-h-20">
               <p className="text-xs text-amortix-slate">Payoff date</p>
               <p className="num mt-1 text-[20px] font-medium text-amortix-navy">
-                {selectedResult.payoffDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+                {selectedResult.payoffDate.toLocaleDateString(getCurrencyConfig(currencyCode).locale, { month: "short", year: "numeric" })}
               </p>
             </div>
           </motion.div>
@@ -391,9 +401,9 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
 
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                     <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748B" }} />
-                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748B" }} tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`} />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748B" }} tickFormatter={(value) => formatCompactCurrency(value, currencyCode)} />
                     <Tooltip
-                      formatter={formatTooltipValue}
+                      formatter={(val) => formatTooltipValue(val, currencyCode)}
                       contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)" }}
                     />
                     <Legend />
@@ -467,7 +477,7 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
                 <div className="rounded-xl border border-amortix-border-light px-3 py-3">
                   <p className="text-[10px] tracking-wider text-amortix-slate font-medium">Monthly cash after EMIs</p>
                   <p className={`num mt-2 text-lg font-medium ${(profile?.monthlyIncome && (profile.monthlyIncome - (profile.monthlyExpenses ?? 0) - totalEMI - extraMonthlyPayment) <= 0) ? "text-red-500" : "text-amortix-navy"}`}>
-                    {profile?.monthlyIncome ? formatCurrency(Math.max(0, (profile.monthlyIncome ?? 0) - (profile.monthlyExpenses ?? 0) - totalEMI - extraMonthlyPayment)) : "Set profile"}
+                    {profile?.monthlyIncome ? formatCurrency(Math.max(0, (profile.monthlyIncome ?? 0) - (profile.monthlyExpenses ?? 0) - totalEMI - extraMonthlyPayment), currencyCode) : "Set profile"}
                   </p>
                 </div>
                 <div className="rounded-xl border border-amortix-border-light px-3 py-3">
@@ -477,7 +487,7 @@ export default function LiveStrategyModeler({ loans, profile, userName }: LiveSt
               </div>
 
               <div className="rounded-xl border border-amortix-border-light bg-amortix-frost px-3 py-3 text-xs text-amortix-slate">
-                <span className="font-medium text-amortix-navy">Scenario focus:</span> {selectedMeta.name} with {formatCurrency(extraMonthlyPayment)} extra monthly and {formatCurrency(oneTimePayment)} one-time prepayment.
+                <span className="font-medium text-amortix-navy">Scenario focus:</span> {selectedMeta.name} with {formatCurrency(extraMonthlyPayment, currencyCode)} extra monthly and {formatCurrency(oneTimePayment, currencyCode)} one-time prepayment.
               </div>
             </div>
           </motion.div>

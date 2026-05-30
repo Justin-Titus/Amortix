@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { getAffordabilityZoneLabel } from "@/lib/calculations/affordability";
+import { getAffordabilityZoneLabel } from "@/lib/calculations";
 
 type AffordabilityGaugeProps = {
   score: number;

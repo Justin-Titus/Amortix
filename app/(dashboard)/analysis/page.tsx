@@ -2,11 +2,12 @@ import { getLoans } from "@/app/actions/loan";
 import { getUserSettings } from "@/app/actions/settings";
 import LiveStrategyModeler from "@/components/dashboard/LiveStrategyModeler";
 import { createClient } from "@/lib/supabase/server";
-import { buildLoanHeroStats } from "@/lib/calculations/loan-summary";
+import { buildLoanHeroStats } from "@/lib/calculations";
 import { PageHero } from "@/components/layout/PageHero";
 import { Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 import { PageWrapper } from "@/components/layout/PageWrapper";
+import { prisma } from "@/lib/prisma";
 
 export const metadata = {
   title: "Live Analysis",
@@ -39,7 +40,10 @@ export default async function AnalysisPage() {
       ? (userCandidate as AnalysisUser)
       : null;
 
-  const pageHeroStats = buildLoanHeroStats(loans);
+  const profile = await prisma.financialProfile.findUnique({ where: { userId: supabaseUser.id } });
+  const currencyCode = profile?.currency ?? "INR";
+
+  const pageHeroStats = buildLoanHeroStats(loans, currencyCode);
 
   return (
     <PageWrapper>
@@ -51,7 +55,7 @@ export default async function AnalysisPage() {
       />
 
       <div className="space-y-8">
-        <LiveStrategyModeler loans={loans} profile={user?.financialProfile ?? null} userName={supabaseUser.user_metadata?.full_name ?? "there"} />
+        <LiveStrategyModeler loans={loans} profile={user?.financialProfile ?? null} userName={supabaseUser.user_metadata?.full_name ?? "there"} currencyCode={currencyCode} />
       </div>
     </PageWrapper>
   );
