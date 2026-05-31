@@ -256,47 +256,86 @@ function getMarginalSaving(loan: LoanState, totalOutstanding: number): number {
   return monthRate(loan.annualRate) * (loan.outstanding / totalOutstanding);
 }
 
-function simulatePayoff(loans: LoanState[], extraAllocations: Map<string, number>, projectionMonths: number): SimulationResult {
-  const outstanding = new Map<string, number>(loans.map((loan) => [loan.id, loan.outstanding]));
+function simulatePayoff(
+  loans: LoanState[],
+  extraAllocations: Map<string, number>,
+  projectionMonths: number,
+  oneTimePayment: number = 0
+): SimulationResult {
+  // Deep-clone balances so we never mutate the caller's data
+  const outstanding = new Map<string, number>(
+    loans.map((loan) => [loan.id, loan.outstanding])
+  );
+
+  // Copy the per-loan extra allocations so we can cascade into them
   const currentExtra = new Map<string, number>(extraAllocations);
-  const activeLoanIds = new Set(loans.filter((loan) => loan.outstanding > 0).map((loan) => loan.id));
+
+  // Track which loans still have a balance
+  const activeIds = new Set<string>(
+    loans.filter((l) => l.outstanding > 0).map((l) => l.id)
+  );
 
   let totalInterest = 0;
   let months = 0;
 
-  while (activeLoanIds.size > 0 && months < projectionMonths) {
-    months += 1;
+  // Running carry-forward: when a loan is fully paid off its freed EMI
+  // (+ any extra already allocated to it) is rolled to the next highest-rate loan.
+  let carryForwardFreedEMI = 0;
 
+  while (activeIds.size > 0 && months < projectionMonths) {
+    months++;
+
+    // Highest-rate first (avalanche cascade mirrors baseline)
     const orderedActive = loans
-      .filter((loan) => activeLoanIds.has(loan.id))
+      .filter((l) => activeIds.has(l.id))
       .sort((a, b) => b.annualRate - a.annualRate);
+
+    // Extra available this month = per-allocation extra + cascade + one-time (month 1 only)
+    let extraRemaining = carryForwardFreedEMI + (months === 1 ? oneTimePayment : 0);
+
+    // Add the per-loan allocation totals into the shared pool
+    for (const loan of orderedActive) {
+      extraRemaining += currentExtra.get(loan.id) ?? 0;
+    }
+    for (const loan of orderedActive) {
+      currentExtra.set(loan.id, 0);
+    }
 
     for (const loan of orderedActive) {
       const remaining = outstanding.get(loan.id) ?? 0;
-      if (remaining <= 0) {
-        activeLoanIds.delete(loan.id);
+      if (remaining <= 0.5) {
+        activeIds.delete(loan.id);
         continue;
       }
 
       const interest = remaining * monthRate(loan.annualRate);
       totalInterest += interest;
 
-      const extra = currentExtra.get(loan.id) ?? 0;
-      const payment = loan.emi + extra;
-      const principalPaid = clamp(payment - interest, 0, remaining);
-      const nextOutstanding = remaining - principalPaid;
+      // Base payment (capped so we never overpay)
+      let payment = Math.min(loan.emi, remaining + interest);
+      let principal = payment - interest;
+      const prevOutstanding = remaining;
 
+      // Apply extra from the shared pool
+      if (extraRemaining > 0) {
+        const extraForThis = Math.min(
+          extraRemaining,
+          Math.max(0, remaining - principal)
+        );
+        if (extraForThis > 0) {
+          payment    += extraForThis;
+          principal  += extraForThis;
+          extraRemaining -= extraForThis;
+        }
+      }
+
+      const nextOutstanding = Math.max(0, remaining - principal);
       outstanding.set(loan.id, nextOutstanding);
 
-      if (nextOutstanding <= 0.5) {
-        activeLoanIds.delete(loan.id);
-
-        // Cascade freed payment to current highest-rate active loan.
-        const destination = orderedActive.find((candidate) => activeLoanIds.has(candidate.id));
-        if (destination) {
-          const destinationExtra = currentExtra.get(destination.id) ?? 0;
-          currentExtra.set(destination.id, destinationExtra + loan.emi + extra);
-        }
+      // When a loan is paid off, cascade its freed EMI to the next month's pool
+      if (prevOutstanding > 0.5 && nextOutstanding <= 0.5) {
+        activeIds.delete(loan.id);
+        carryForwardFreedEMI += loan.emi;
       }
     }
   }
@@ -308,11 +347,7 @@ function simulatePayoff(loans: LoanState[], extraAllocations: Map<string, number
 }
 
 export function optimizeEMIAllocation(
-  loans: LoanState[],
-  extraBudget: number,
-  currencyCode: string = "INR",
-  projectionMonths: number = 240
-): OptimizationResult {
+loans: LoanState[], extraBudget: number, currencyCode: string = "INR", projectionMonths: number = 240, oneTimePayment: number): OptimizationResult {
   if (loans.length === 0) {
     return {
       allocations: [],

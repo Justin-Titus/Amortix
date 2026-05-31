@@ -40,7 +40,7 @@ export default async function StrategyPage() {
         description="Compare avalanche, snowball, and hybrid payoff paths with live savings, payoff timing, and detailed amortization schedules."
         stats={pageHeroStats}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-5 border-t border-slate-100/60">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { icon: TrendingUp, text: "Extra payments go to the highest-rate debt first", color: "bg-emerald-50 text-emerald-600" },
             { icon: ShieldCheck, text: "Switch to snowball if you need psychological wins", color: "bg-blue-50 text-blue-600" },

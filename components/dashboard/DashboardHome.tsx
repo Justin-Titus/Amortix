@@ -20,7 +20,7 @@ import LoanProgressBar from "@/components/dashboard/LoanProgressBar";
 import AIInsightCard from "@/components/dashboard/AIInsightCard";
 import HealthTrendChart, { type HealthSnapshotPoint } from "@/components/analysis/HealthTrendChart";
 import DebtDistributionChart from "@/components/dashboard/DebtDistributionChart";
-import InterestLeakDetector from "@/components/analysis/InterestLeakDetector";
+
 import { MetricCard } from "@/components/ui/MetricCard";
 import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -339,9 +339,9 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-[13px] font-medium text-amortix-navy">Live analysis workspace</h2>
+                <h2 className="text-[13px] font-medium text-amortix-navy">Deep analysis workspace</h2>
                 <p className="mt-1 text-[12px] leading-6 text-amortix-slate">
-                  Run extra-payment scenarios, compare strategies, and review affordability in real time.
+                  Get real-time debt health signals, detect interest leaks, and review your financial profile.
                 </p>
                 <Link href="/analysis" className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-amortix-emerald hover:text-emerald-700">
                   Open analysis
@@ -389,23 +389,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
               </div>
             </motion.div>
 
-            <motion.div variants={fadeUpVariants} custom={1}>
-              <InterestLeakDetector
-                loans={loans.map((loan) => ({
-                  id: loan.id,
-                  name: loan.name,
-                  loanType: loan.loanType,
-                  interestRate: loan.interestRate,
-                  rateType: loan.rateType,
-                  tenureMonths: loan.tenureMonths,
-                  outstandingBalance: loan.outstandingBalance,
-                  emiAmount: loan.emiAmount,
-                }))}
-                profile={leakProfile}
-              />
-            </motion.div>
-
-            <motion.div variants={fadeUpVariants} custom={2} className="card space-y-4">
+            <motion.div variants={fadeUpVariants} custom={1} className="card space-y-4">
               <div>
                 <h2 className="text-[13px] font-medium text-amortix-navy">Debt distribution</h2>
                 <p className="text-[11px] text-amortix-slate">Percentage breakdown of your portfolio</p>

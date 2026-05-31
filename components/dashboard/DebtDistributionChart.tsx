@@ -19,7 +19,7 @@ export default function DebtDistributionChart({ loans }: DebtDistributionProps) 
   return (
     <div className="flex flex-row items-center gap-8 mt-6 min-h-[170px]">
       <div className="relative w-44 h-44 flex-shrink-0">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <PieChart>
             <Pie
               data={loans}

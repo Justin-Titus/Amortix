@@ -113,39 +113,6 @@ export default function StrategyComparison({
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_minmax(0,1fr)] xl:gap-8 xl:grid-cols-[360px_minmax(0,1.25fr)]">
         <div className="space-y-6">
-          <div className="section-block p-5">
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-heading font-medium text-amortix-navy">
-              <Calculator className="h-5 w-5 text-amortix-emerald" />
-              Extra Payment Simulator
-            </h2>
-            <p className="mb-6 text-sm text-amortix-slate">
-              How much extra can you put towards your debt each month?
-            </p>
-            
-            <div className="space-y-1">
-              <SliderField
-                label="Monthly extra"
-                value={extraPayment}
-                min={0}
-                max={100000}
-                step={1000}
-                displayValue={formatCurrency(extraPayment, currencyCode)}
-                onChange={setExtraPayment}
-                currencyCode={currencyCode}
-              />
-              <SliderField
-                label="One-time prepayment"
-                value={oneTimePayment}
-                min={0}
-                max={1000000}
-                step={10000}
-                displayValue={formatCurrency(oneTimePayment, currencyCode)}
-                onChange={setOneTimePayment}
-                currencyCode={currencyCode}
-              />
-            </div>
-          </div>
-
           <EMIOptimizerPanel
             loans={loans.map((loan) => ({
               id: loan.id,
@@ -156,18 +123,39 @@ export default function StrategyComparison({
             }))}
             extraBudget={extraPayment}
             onExtraBudgetChange={setExtraPayment}
+            oneTimePayment={oneTimePayment}
+            onOneTimePaymentChange={setOneTimePayment}
             currencyCode={currencyCode}
           />
+
+          <div className="section-block">
+            <h2 className="mb-4 text-base font-heading font-medium text-amortix-navy">
+              Select Strategy
+            </h2>
+            <div className="space-y-3">
+              {strategies.map((strat) => (
+                <StrategyOptionButton
+                  key={strat.id}
+                  id={strat.id}
+                  name={strat.name}
+                  desc={strat.desc}
+                  icon={strat.icon}
+                  isActive={selectedStrategy === strat.id}
+                  onClick={() => setSelectedStrategy(strat.id)}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 xl:gap-4">
-            <div className="dark-panel p-5">
-              <p className="mb-2 text-xs tracking-[0.03em] text-slate-300">Total interest saved</p>
-              <p className={`text-3xl font-currency font-medium ${activeStrObj.data.totalSavedVsMinimum > 0 ? "text-(--color-emerald-light)" : "text-slate-500"}`}>
+            <div className="section-block p-5 border-l-4" style={{ borderLeftColor: activeStrObj.color }}>
+              <p className="mb-2 text-xs tracking-[0.03em] text-slate-400">Total interest saved</p>
+              <p className={`text-3xl font-currency font-medium ${activeStrObj.data.totalSavedVsMinimum > 0 ? "text-emerald-600" : "text-amortix-navy"}`}>
                 {formatCurrency(activeStrObj.data.totalSavedVsMinimum, currencyCode)}
               </p>
-              <p className="mt-2 text-xs text-slate-400">vs minimum payments</p>
+              <p className="mt-2 text-xs text-amortix-slate">vs minimum payments</p>
             </div>
             
             <div className="section-block border-l-4 p-5" style={{ borderLeftColor: activeStrObj.color }}>
@@ -199,7 +187,7 @@ export default function StrategyComparison({
               </h2>
             </div>
             <ChartContainer height={320}>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart
                   data={chartData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -227,24 +215,7 @@ export default function StrategyComparison({
             </ChartContainer>
           </div>
 
-          <div className="section-block">
-            <h2 className="mb-4 text-base font-heading font-medium text-amortix-navy">
-              Select Strategy
-            </h2>
-            <div className="space-y-3">
-              {strategies.map((strat) => (
-                <StrategyOptionButton
-                  key={strat.id}
-                  id={strat.id}
-                  name={strat.name}
-                  desc={strat.desc}
-                  icon={strat.icon}
-                  isActive={selectedStrategy === strat.id}
-                  onClick={() => setSelectedStrategy(strat.id)}
-                />
-              ))}
-            </div>
-          </div>
+
         </div>
       </div>
       

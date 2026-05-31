@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Card } from "@/components/ui/Card";
 
 type SkeletonBlockProps = {
   className?: string;
@@ -13,9 +14,9 @@ export function SkeletonLine({ className = "" }: SkeletonBlockProps) {
 }
 
 export function SkeletonHero({
-  badgeWidth = "w-36",
-  titleWidth = "w-72",
-  descriptionWidth = "w-3/4",
+  badgeWidth = "w-32",
+  titleWidth = "w-64",
+  descriptionWidth = "w-3/4 max-w-2xl",
   stats = 0,
   withActions = true,
   children,
@@ -28,30 +29,34 @@ export function SkeletonHero({
   children?: ReactNode;
 }) {
   return (
-    <div className="glass-panel space-y-4 p-6 md:p-8">
-      <SkeletonLine className={`h-6 ${badgeWidth}`} />
-      <SkeletonLine className={`h-10 ${titleWidth}`} />
-      <SkeletonLine className={`h-4 ${descriptionWidth}`} />
+    <div className="glass-panel mb-5 p-4 sm:p-5 md:p-8">
+      <SkeletonLine className={`mb-4 h-6 ${badgeWidth}`} />
 
-      {withActions ? (
-        <div className="flex flex-wrap gap-3 pt-1">
-          <SkeletonBlock className="h-11 w-40 rounded-[var(--radius-button)]" />
-          <SkeletonBlock className="h-11 w-32 rounded-[var(--radius-button)]" />
-        </div>
-      ) : null}
-
-      {stats > 0 ? (
-        <div className="grid grid-cols-2 gap-3 pt-2 md:grid-cols-4">
-          {Array.from({ length: stats }).map((_, index) => (
-            <div key={index} className="rounded-[var(--radius-card)] border border-amortix-border-light bg-amortix-frost px-4 py-3">
-              <SkeletonLine className="mb-2 h-2.5 w-16" />
-              <SkeletonBlock className="h-7 w-20 rounded-lg" />
+      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:gap-6">
+        <div className="flex-1 min-w-0 w-full space-y-3">
+          <SkeletonLine className={`h-8 sm:h-9 md:h-10 ${titleWidth}`} />
+          <SkeletonLine className={`h-4 ${descriptionWidth}`} />
+          
+          {withActions && (
+            <div className="mt-4 flex w-full flex-wrap items-center gap-2 sm:gap-3">
+              <SkeletonBlock className="h-10 w-28 rounded-md" />
+              <SkeletonBlock className="h-10 w-32 rounded-md" />
             </div>
-          ))}
+          )}
         </div>
-      ) : null}
 
-      {children}
+        {stats > 0 && (
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-3 sm:justify-end">
+            {Array.from({ length: stats }).map((_, i) => (
+              <div key={i} className="min-w-0 rounded-card border border-amortix-border-light bg-amortix-frost px-3 py-2 text-center sm:min-w-26 sm:px-4 sm:py-3 space-y-2">
+                <SkeletonLine className="mx-auto h-2.5 w-16" />
+                <SkeletonBlock className="mx-auto h-6 w-20 sm:h-7 rounded-md" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {children && <div className="mt-4 border-t border-slate-100 pt-4 sm:mt-5 sm:pt-5">{children}</div>}
     </div>
   );
 }
@@ -64,12 +69,31 @@ export function SkeletonMetricGrid({
   className?: string;
 }) {
   return (
-    <div className={`grid grid-cols-2 gap-3 md:grid-cols-4 ${className}`}>
+    <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 ${className}`}>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="metric-card space-y-3">
+        <Card key={index} className="p-5 min-h-[110px] space-y-3">
           <SkeletonLine className="h-2.5 w-24" />
           <SkeletonBlock className="h-7 w-28 rounded-lg" />
           <SkeletonLine className="h-2.5 w-3/4" />
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonList({ count = 5 }: { count?: number }) {
+  return (
+    <div className="divide-y divide-amortix-border-light">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
+          <div className="space-y-2 w-1/2">
+            <SkeletonLine className="h-3.5 w-32" />
+            <SkeletonLine className="h-2.5 w-24" />
+          </div>
+          <div className="space-y-2 w-1/3 flex flex-col items-end">
+            <SkeletonLine className="h-3.5 w-20" />
+            <SkeletonLine className="h-2.5 w-24" />
+          </div>
         </div>
       ))}
     </div>

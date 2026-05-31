@@ -20,7 +20,7 @@ type DashboardHeaderProps = {
 
 const pageTitleMap: Record<string, string> = {
   "/dashboard": "Dashboard",
-  "/analysis": "Live Analysis",
+  "/analysis": "Analysis",
   "/insights": "Insights",
   "/loans": "My Loans",
   "/calendar": "EMI Calendar",
