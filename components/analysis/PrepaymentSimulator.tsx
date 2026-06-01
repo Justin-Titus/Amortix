@@ -79,7 +79,7 @@ export default function PrepaymentSimulator({
     const extra = tab === "monthly" ? monthlyExtra : tab === "hybrid" ? hybridMonthly : 0;
 
     const adjustedOutstanding = Math.max(0, outstandingBalance - lump);
-    const schedule = generateAmortizationSchedule(adjustedOutstanding, interestRate, remainingMonths, extra);
+    const schedule = generateAmortizationSchedule(adjustedOutstanding, interestRate, remainingMonths, extra, emiAmount);
     const summary = getScheduleSummary(schedule);
 
     return { lump, extra, schedule, summary };
@@ -109,7 +109,14 @@ export default function PrepaymentSimulator({
     ? scenario.extra * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate)
     : 0;
   const fdReturn = Math.round((futureValueLump + futureValueMonthly) * 100) / 100;
-  const netAdvantage = interestSaved - fdReturn;
+  const fdInterestEarned = Math.max(0, Math.round((futureValueLump + futureValueMonthly - scenarioCapital) * 100) / 100);
+  const netAdvantage = interestSaved - fdInterestEarned;
+
+  const investmentActionText = tab === "lump"
+    ? `${formatCurrency(scenario.lump, currencyCode)} upfront in a 7% FD`
+    : tab === "monthly"
+    ? `${formatCurrency(scenario.extra, currencyCode)} monthly in a 7% RD`
+    : `${formatCurrency(scenario.lump, currencyCode)} upfront in a 7% FD and ${formatCurrency(scenario.extra, currencyCode)} monthly in a 7% RD`;
 
   return (
     <div className="section-block space-y-4">
@@ -237,7 +244,7 @@ export default function PrepaymentSimulator({
 
 
       <p className="text-xs text-amortix-slate">
-        If you invested {formatCurrency(scenarioCapital, currencyCode)} in a fixed deposit at 7%, you&apos;d earn {formatCurrency(fdReturn, currencyCode)}.
+        If you invested {investmentActionText} instead for the next {months} months, you&apos;d earn {formatCurrency(fdInterestEarned, currencyCode)} in interest.
         Prepaying saves {formatCurrency(interestSaved, currencyCode)} in interest, net advantage: {formatCurrency(netAdvantage, currencyCode)}.
       </p>
     </div>

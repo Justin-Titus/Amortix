@@ -10,7 +10,6 @@ import {
 } from "@/lib/validations/auth.schema";
 import { createClient } from "@/lib/supabase/client";
 import { syncUserWithPrisma, isPasswordLeaked } from "@/app/actions/auth";
-import OAuthButtons from "./OAuthButtons";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -148,16 +147,7 @@ export default function RegisterForm() {
       </div>
 
       <div className="glass-panel p-8">
-        <OAuthButtons callbackUrl="/dashboard" />
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[var(--color-border)]"></div>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase tracking-[0.22em]">
-            <span className="bg-[rgba(255,253,250,0.92)] px-3 text-amortix-slate">or register with email</span>
-          </div>
-        </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-[var(--color-danger)] text-sm rounded-[var(--radius-button)] px-4 py-3 mb-4">
