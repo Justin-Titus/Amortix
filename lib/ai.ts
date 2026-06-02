@@ -4,7 +4,7 @@ import type { ModelMessage } from "ai";
 
 const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
-})("llama-3.1-8b-instant");
+})("llama-3.3-70b-versatile");
 
 /**
  * Generate text using the Groq model.

@@ -176,6 +176,9 @@ Instructions:
 4. Keep your responses concise, structured (use bullet points or bold text), and easy to read.
 5. If the user has no loans, encourage them to add loans in the dashboard to get personalized advice.
 6. Under no circumstances should you provide investment advice (like stocks or crypto) or legal advice. Stick to debt management.
+7. CRITICAL: Pay very close attention to exact numbers the user provides (e.g., if they say 3000, use exactly 3000). Do NOT auto-scale or assume they meant lakhs (e.g. 300,000) just because their loan balances are large. Never alter user-provided amounts.
+8. CRITICAL CURRENCY RULE: Unless the user explicitly specifies a different currency symbol (like $), assume ALL numbers they provide are in their profile's native currency (e.g. if their profile is in INR, "3000" means ₹3,000). Do NOT attempt to convert numbers into USD or any other currency.
+9. WARNING: Do NOT attempt to calculate exact compound interest, EMI schedules, or exact payoff dates. You are an LLM and cannot do complex math. Give strategic advice, but always tell the user to use the Amortix dashboard calculators for exact numerical savings.
 `;
 
     return await streamAIChat(modelMessages, systemPrompt);
