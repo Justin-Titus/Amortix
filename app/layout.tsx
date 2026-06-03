@@ -1,8 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { env } from "@/lib/env";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -40,6 +44,10 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "EtdRG0e9kp5wZrHm4h6mIYQgMwDhaF-_9JuRRIujFxw",
+  },
+  appleWebApp: {
+    title: "Amortix",
+    statusBarStyle: "default",
   },
   metadataBase: new URL(env.APP_URL),
 };

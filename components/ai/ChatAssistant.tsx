@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { TextStreamChatTransport } from "ai";
-import { Bot, Send, User, RefreshCcw, Copy, Check } from "lucide-react";
+import { Bot, Send, User, MessageSquarePlus, Copy, Check } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
@@ -36,7 +36,7 @@ export default function ChatAssistant({ initialInput }: { initialInput?: string 
     () => new TextStreamChatTransport({ api: "/api/chat" }),
     []
   );
-  const { messages, status, regenerate, stop, sendMessage } = useChat({ transport });
+  const { messages, setMessages, status, stop, sendMessage } = useChat({ transport });
 
   const isLoading = status === "submitted" || status === "streaming";
 
@@ -101,11 +101,16 @@ export default function ChatAssistant({ initialInput }: { initialInput?: string 
           </div>
           {messages.length > 0 && (
             <button
-              onClick={() => regenerate()}
-              className="rounded-2xl border border-white/10 bg-white/10 p-2 text-white/70 hover:bg-white/15 hover:text-white"
-              title="Regenerate last response"
+              onClick={() => {
+                if (window.confirm("Start a new chat?")) {
+                  setMessages([]);
+                }
+              }}
+              className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-medium text-white/70 hover:bg-white/15 hover:text-white"
+              title="New Chat"
             >
-              <RefreshCcw className="h-4 w-4" />
+              <MessageSquarePlus className="h-4 w-4" />
+              <span className="hidden sm:inline">New Chat</span>
             </button>
           )}
         </div>
