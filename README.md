@@ -16,6 +16,9 @@
 
 **Amortix** is a sophisticated, AI-driven financial platform designed to help users regain control of their debts. By combining advanced amortization modeling with AI-powered insights, Amortix provides a comprehensive suite of tools for tracking loans, analyzing "interest leaks," and simulating repayment strategies to achieve financial freedom faster.
 
+> **📱 Companion Mobile App**
+> This repository contains the Next.js web application. Amortix also has a companion cross-platform mobile app built with React Native and Expo! You can check out the mobile repository here: [Amortix Mobile Repository](https://github.com/Justin-Titus/AmortixMobile)
+
 ## ✨ Key Features
 
 - 🏦 **Comprehensive Loan Dashboard**: Add, edit, and manage all your loans in one centralized, intuitive interface.
