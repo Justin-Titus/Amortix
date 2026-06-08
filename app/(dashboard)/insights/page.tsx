@@ -55,14 +55,13 @@ export default async function InsightsPage() {
   const typedProfile = profile;
   const currencyCode = (profile as any)?.currency ?? "INR";
 
-  const totals = {
-    outstanding: loans.reduce((sum, loan) => sum + loan.outstandingBalance, 0),
-    emi: loans.reduce((sum, loan) => sum + loan.emiAmount, 0),
-    avgRate:
-      loans.length > 0
-        ? loans.reduce((sum, loan) => sum + loan.interestRate, 0) / loans.length
-        : 0,
-  };
+  const outstanding = loans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
+  const emi = loans.reduce((sum, loan) => sum + loan.emiAmount, 0);
+  const avgRate = outstanding > 0
+    ? loans.reduce((sum, loan) => sum + loan.interestRate * loan.outstandingBalance, 0) / outstanding
+    : 0;
+
+  const totals = { outstanding, emi, avgRate };
 
   const leaks = typedProfile
     ? detectInterestLeaks(
@@ -169,6 +168,7 @@ export default async function InsightsPage() {
               { label: "Add monthly income and expenses", done: false, href: "/profile" },
               { label: "Set your emergency fund status", done: false, href: "/profile" },
               { label: "Add at least one loan", done: loans.length > 0, href: "/loans/add" },
+
             ].map(({ label, done, href }) => (
               <div key={label} className="flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center ${done ? "bg-emerald-100" : "border-2 border-slate-200"}`}>

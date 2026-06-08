@@ -1,4 +1,4 @@
-﻿import { createServerClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 type CookieOptions = {
@@ -37,8 +37,15 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // refreshing the auth token
-  await supabase.auth.getUser()
+  try {
+    // refreshing the auth token
+    await supabase.auth.getUser()
+  } catch (error) {
+    // If the refresh token is completely invalid, Supabase might throw an AuthApiError.
+    // Catching it prevents the middleware from crashing the server and allows
+    // proxy.ts to gracefully redirect the unauthenticated user to /login.
+    console.error('Middleware AuthError:', error)
+  }
 
   return supabaseResponse
 }

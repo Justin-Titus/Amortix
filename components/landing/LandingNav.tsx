@@ -21,6 +21,7 @@ export default function LandingNav() {
             { label: "Features", href: "#features" },
             { label: "Calculator", href: "#calculator" },
             { label: "How it works", href: "#how-it-works" },
+            { label: "Mobile App", href: "#get-app" },
           ].map((link) => (
             <li key={link.label}>
               <a href={link.href} className="text-sm font-medium text-amortix-slate transition hover:text-amortix-navy">

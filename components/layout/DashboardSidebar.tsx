@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Download, Smartphone } from "lucide-react";
 import { mainNavItems, toolsNavItems, type NavItem } from "@/components/layout/navigation";
 
 type DashboardSidebarProps = {
@@ -85,7 +86,22 @@ export default function DashboardSidebar({ mobile = false, onNavigate }: Dashboa
           </nav>
         </div>
 
-        <div className="mt-auto border-t border-white/8 pt-4" />
+        <div className="mt-auto pt-4 pb-2">
+          <div className="mx-4 h-px bg-white/8 mb-4" />
+          <a
+            id="sidebar-download-apk"
+            href="https://github.com/Justin-Titus/AmortixMobile/releases/latest/download/Amortix.apk"
+            className="group relative mx-2 flex min-h-11 items-center gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5 text-[13px] text-slate-300 transition-all duration-150 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-white"
+            title="Download Amortix for Android"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md text-emerald-400/80 group-hover:text-emerald-300">
+              <Download className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="block truncate font-medium">Android App</span>
+            </div>
+          </a>
+        </div>
       </div>
     </aside>
   );

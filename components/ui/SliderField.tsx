@@ -45,7 +45,7 @@ export default function SliderField({
         className="h-2 w-full cursor-pointer appearance-none rounded-full bg-amortix-border-light"
         style={{
           accentColor: "var(--color-emerald)",
-          backgroundImage: `linear-gradient(to right, var(--color-emerald) 0%, var(--color-emerald-dark) ${progress}%, var(--color-border-light) ${progress}%, var(--color-border-light) 100%)`,
+          backgroundImage: `linear-gradient(to right, var(--color-emerald) 0%, var(--color-emerald-dark) ${progress}%, var(--color-border) ${progress}%, var(--color-border) 100%)`,
         }}
       />
 

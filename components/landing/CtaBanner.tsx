@@ -1,11 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function CtaBanner() {
   return (
-    <section className="bg-slate-50 py-16 lg:py-20 animate-fade-up">
+    <section className="bg-slate-50 py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-4xl bg-amortix-navy px-6 py-12 text-white shadow-[0_24px_80px_rgba(15,27,45,0.24)] sm:px-10 sm:py-14 lg:px-12">
+        <motion.div 
+          className="relative overflow-hidden rounded-4xl bg-amortix-navy px-6 py-12 text-white shadow-[0_24px_80px_rgba(15,27,45,0.24)] sm:px-10 sm:py-14 lg:px-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="pointer-events-none absolute -right-16 top-0 h-56 w-56 rounded-full bg-emerald-500/10 blur-3xl" />
           <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl" />
 
@@ -26,7 +35,7 @@ export default function CtaBanner() {
               </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

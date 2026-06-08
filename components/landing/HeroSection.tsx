@@ -1,5 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, TrendingDown, Zap } from "lucide-react";
+import { motion } from "framer-motion";
+
+function formatIndianCurrency(amount: number) {
+  if (amount >= 10000000) {
+    return `₹${(amount / 10000000).toFixed(1)}Cr+`;
+  } else if (amount >= 100000) {
+    return `₹${(amount / 100000).toFixed(1)}L+`;
+  } else if (amount >= 1000) {
+    return `₹${(amount / 1000).toFixed(1)}k+`;
+  }
+  return `₹${amount}`;
+}
+
 
 function DashboardPreview() {
   return (
@@ -42,10 +57,13 @@ function DashboardPreview() {
             </div>
             <div className="mt-4 flex h-24 items-end gap-2">
               {[34, 44, 58, 48, 38, 31, 25, 20, 18, 12, 9, 5].map((value, index) => (
-                <div
+                <motion.div
                   key={index}
                   className="flex-1 rounded-t-full bg-linear-to-t from-emerald-500 to-emerald-300"
-                  style={{ height: `${value}%` }}
+                  initial={{ height: 0 }}
+                  whileInView={{ height: `${value}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: index * 0.05 + 0.5 }}
                 />
               ))}
             </div>
@@ -69,11 +87,19 @@ function DashboardPreview() {
   );
 }
 
-export default function HeroSection() {
+export default function HeroSection({ totalActiveLoans = 24000000 }: { totalActiveLoans?: number }) {
+  const formattedAmount = formatIndianCurrency(totalActiveLoans);
+
   return (
-    <section id="hero" aria-labelledby="hero-heading" className="bg-white py-20 sm:py-24 animate-fade-up">
+    <section id="hero" aria-labelledby="hero-heading" className="bg-white py-12 sm:py-16">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8">
-        <div className="max-w-2xl">
+        <motion.div 
+          className="max-w-2xl"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <p className="section-label">3 strategies · 12-month projections · AI advisor</p>
           <h1 className="hero-h1 mt-6">A sharper way<br />to manage debt.</h1>
           <p className="body-text mt-6 max-w-xl">
@@ -90,28 +116,34 @@ export default function HeroSection() {
             </a>
           </div>
 
-          <div className="mt-8 flex flex-col gap-4 rounded-4xl border border-slate-200/70 bg-amortix-frost p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {['JT', 'AM', 'SR', 'PK'].map((initial, index) => (
-                  <span key={initial} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#0D1F3C] text-xs font-semibold text-white shadow-sm" style={{ marginLeft: index === 0 ? 0 : -8 }}>
-                    {initial}
-                  </span>
-                ))}
+            <div className="mt-8 flex flex-col gap-4 rounded-4xl border border-slate-200/70 bg-amortix-frost p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex -space-x-2">
+                  {['JT', 'AM', 'SR', 'PK'].map((initial, index) => (
+                    <span key={initial} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#0D1F3C] text-xs font-semibold text-white shadow-sm" style={{ marginLeft: index === 0 ? 0 : -8 }}>
+                      {initial}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm text-amortix-slate">
+                  Trusted by borrowers tracking <span className="font-medium text-amortix-navy">{formattedAmount}</span> in active loans.
+                </p>
               </div>
               <p className="text-sm text-amortix-slate">
-                Trusted by borrowers tracking <span className="font-medium text-amortix-navy">₹2.4Cr+</span> in active loans.
+                A calmer, cleaner debt workflow that feels precise instead of noisy.
               </p>
             </div>
-            <p className="text-sm text-amortix-slate">
-              A calmer, cleaner debt workflow that feels precise instead of noisy.
-            </p>
-          </div>
-        </div>
+          </motion.div>
 
-        <div className="lg:justify-self-end animate-fade-up">
+        <motion.div 
+          className="lg:justify-self-end"
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <DashboardPreview />
-        </div>
+        </motion.div>
       </div>
     </section>
   );

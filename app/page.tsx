@@ -5,11 +5,12 @@ import DeferredCalculator from "@/components/landing/DeferredCalculator";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import TrustSection from "@/components/landing/TrustSection";
-import CtaBanner from "@/components/landing/CtaBanner";
+import GetTheAppBanner from "@/components/landing/GetTheAppBanner";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
 export default async function LandingPage() {
   const supabase = await createClient();
@@ -19,17 +20,25 @@ export default async function LandingPage() {
     redirect("/dashboard");
   }
 
+  const result = await prisma.loan.aggregate({
+    _sum: {
+      outstandingBalance: true,
+    },
+  });
+  
+  const totalActiveLoans = result._sum.outstandingBalance || 24000000; // Fallback to 2.4Cr if 0
+
   return (
     <div className="min-h-screen bg-amortix-frost text-amortix-text-primary">
       <LandingNav />
       <main>
-        <HeroSection />
+        <HeroSection totalActiveLoans={totalActiveLoans} />
         <StatsBand />
         <DeferredCalculator />
         <FeaturesSection />
         <HowItWorksSection />
         <TrustSection />
-        <CtaBanner />
+        <GetTheAppBanner />
       </main>
       <LandingFooter />
     </div>

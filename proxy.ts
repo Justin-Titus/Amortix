@@ -63,9 +63,13 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
+  const user = data?.user ?? null;
+
+  if (error) {
+    // Session is invalid or refresh token is expired.
+    // Proceed as unauthenticated.
+  }
 
   const isLoggedIn = !!user;
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));

@@ -1,5 +1,8 @@
+"use client";
+
 import { BarChart3, Bot, FileDown, ShieldCheck } from "lucide-react";
 import FeatureCard from "@/components/ui/FeatureCard";
+import { motion } from "framer-motion";
 
 const features = [
   {
@@ -32,19 +35,48 @@ const features = [
   },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+};
+
 export default function FeaturesSection() {
   return (
-    <section id="features" aria-labelledby="features-heading" className="bg-slate-50 py-20 animate-fade-up">
+    <section id="features" aria-labelledby="features-heading" className="bg-slate-50 py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="max-w-3xl">
+        <motion.div 
+          className="max-w-3xl"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={itemVariants}
+        >
           <p className="section-label">What you get</p>
           <h2 id="features-heading" className="section-heading mt-3">
             Everything needed for a cleaner debt experience.
           </h2>
-        </div>
+        </motion.div>
 
-        <ul className="mt-10 grid gap-4 lg:grid-cols-3 xl:gap-6 list-none" role="list">
-          <li className="row-span-2 rounded-4xl bg-amortix-navy p-8 text-white shadow-[0_24px_80px_rgba(15,27,45,0.12)]" role="listitem">
+        <ul 
+          className="mt-10 grid gap-4 lg:grid-cols-3 xl:gap-6 list-none" 
+          role="list"
+        >
+          <motion.li 
+            className="row-span-2 rounded-4xl bg-amortix-navy p-8 text-white shadow-[0_24px_80px_rgba(15,27,45,0.12)]" 
+            role="listitem"
+            variants={itemVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-emerald-500/15 text-emerald-200">
               <BarChart3 className="h-5 w-5" />
             </div>
@@ -64,24 +96,37 @@ export default function FeaturesSection() {
                     <span>{item.value}%</span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
-                    <div className={`${item.color} h-full rounded-full`} style={{ width: `${item.value}%` }} />
+                    <motion.div 
+                      className={`${item.color} h-full rounded-full`} 
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${item.value}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                    />
                   </div>
                 </div>
               ))}
             </div>
-          </li>
+          </motion.li>
 
           {features.map((feature) => (
-            <li key={feature.title} role="listitem">
+            <motion.li 
+              key={feature.title} 
+              role="listitem" 
+              variants={itemVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+            >
               <FeatureCard
                 Icon={feature.icon}
                 title={feature.title}
                 description={feature.description}
                 iconBg={feature.iconBg}
                 iconColor={feature.iconColor}
-                className="rounded-4xl border border-slate-200 bg-white p-8 shadow-[0_18px_40px_rgba(15,27,45,0.06)]"
+                className="rounded-4xl border border-slate-200 bg-white p-8 shadow-[0_18px_40px_rgba(15,27,45,0.06)] h-full"
               />
-            </li>
+            </motion.li>
           ))}
         </ul>
       </div>
