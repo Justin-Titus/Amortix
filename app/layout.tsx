@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   verification: {
-    google: "EtdRG0e9kp5wZrHm4h6mIYQgMwDhaF-_9JuRRIujFxw",
+    google: "vHuZEzo-WWZ_EvtN9QbIC18FZpbpv398in2TkEjSp8I",
   },
   appleWebApp: {
     title: "Amortix",
