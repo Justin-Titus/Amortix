@@ -26,11 +26,11 @@ const employmentOptions: { value: EmploymentType; label: string }[] = [
 ];
 
 const creditOptions = [
-  { value: "300-579", label: "300 - 579 (Poor)" },
-  { value: "580-669", label: "580 - 669 (Fair)" },
-  { value: "670-739", label: "670 - 739 (Good)" },
-  { value: "740-799", label: "740 - 799 (Very good)" },
-  { value: "800-850", label: "800 - 850 (Exceptional)" },
+  { value: "below 650", label: "Below 650 (Poor/Fair)" },
+  { value: "650-700", label: "650 - 700 (Fair/Good)" },
+  { value: "700-750", label: "700 - 750 (Good)" },
+  { value: "750-800", label: "750 - 800 (Very Good)" },
+  { value: "800+", label: "800+ (Exceptional)" },
 ];
 
 export function FinancialProfileForm({ defaultValues }: { defaultValues: FinancialProfileFormValues }) {
