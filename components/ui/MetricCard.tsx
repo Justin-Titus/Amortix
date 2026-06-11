@@ -42,7 +42,7 @@ export function MetricCard({
       ) : (
         <>
           <p className={`mb-1 text-[22px] font-medium font-mono ${colorMap[valueColor]}`}>{value}</p>
-          {description ? <p className="text-[11px] leading-snug text-slate-500">{description}</p> : null}
+          {description ? <p className="text-[11px] leading-snug text-slate-500 line-clamp-2">{description}</p> : null}
         </>
       )}
     </Card>

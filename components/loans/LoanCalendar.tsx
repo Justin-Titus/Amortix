@@ -48,10 +48,30 @@ export default function LoanCalendar({ loans, initialMonth, currencyCode = "INR"
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
 
-  const { days, dueIn30, totalDueIn30 } = useMemo(
+  const { days } = useMemo(
     () => buildCalendarData(loans, currentMonth, today),
     [loans, currentMonth, today]
   );
+
+  const { dueThisMonth, totalDueThisMonth } = useMemo(() => {
+    const list: { loanId: string; loanName: string; amount: number; dueDate: Date; status: string }[] = [];
+    for (const dateKey of Object.keys(days)) {
+      for (const loan of days[dateKey].loans) {
+        list.push({
+          loanId: loan.loanId,
+          loanName: loan.loanName,
+          amount: loan.emiAmount,
+          dueDate: new Date(dateKey),
+          status: loan.status,
+        });
+      }
+    }
+    list.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+    return {
+      dueThisMonth: list,
+      totalDueThisMonth: list.reduce((s, e) => s + e.amount, 0),
+    };
+  }, [days]);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDayOfWeek = new Date(year, month, 1).getDay();
@@ -67,8 +87,8 @@ export default function LoanCalendar({ loans, initialMonth, currencyCode = "INR"
         title="EMI Calendar"
         description="Plan upcoming dues across all loans and avoid payment pileups."
         stats={[
-          { label: "Due in next 30 days", value: formatCurrency(totalDueIn30, currencyCode), muted: totalDueIn30 === 0 },
-          { label: "Scheduled payments", value: `${dueIn30.length}`, muted: dueIn30.length === 0 },
+          { label: "Due this month", value: formatCurrency(totalDueThisMonth, currencyCode), muted: totalDueThisMonth === 0 },
+          { label: "Scheduled payments", value: `${dueThisMonth.length}`, muted: dueThisMonth.length === 0 },
         ]}
       />
 
@@ -211,19 +231,27 @@ export default function LoanCalendar({ loans, initialMonth, currencyCode = "INR"
               </div>
             </div>
           ) : (
-            dueIn30.length === 0 ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-500">No EMIs due within the next 30 days.</div>
+            dueThisMonth.length === 0 ? (
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-500">No EMIs due this month.</div>
             ) : (
               <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4">
-                <p className="text-sm font-medium text-[#0D1F3C]">Next payments</p>
+                <p className="text-sm font-medium text-[#0D1F3C]">This month's dues</p>
                 <div className="mt-3 space-y-3">
-                  {dueIn30.map((entry) => (
-                    <div key={`${entry.loanId}-${entry.dueDate.toISOString()}`} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
+                  {dueThisMonth.map((entry) => (
+                    <div key={`${entry.loanId}-${entry.dueDate.toISOString()}`} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-3 ${entry.status === 'paid' ? 'bg-emerald-50 opacity-80' : entry.status === 'overdue' ? 'bg-red-50' : 'bg-slate-50'}`}>
                       <div>
-                        <p className="text-sm text-[#0D1F3C]">{entry.loanName}</p>
-                        <p className="text-[11px] text-slate-500">{new Intl.DateTimeFormat(getCurrencyConfig(currencyCode).locale, { day: 'numeric', month: 'short' }).format(entry.dueDate)}</p>
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm ${entry.status === 'paid' ? 'text-emerald-900 line-through' : entry.status === 'overdue' ? 'text-red-900 font-semibold' : 'text-[#0D1F3C]'}`}>{entry.loanName}</p>
+                          {entry.status === 'overdue' && (
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-red-600 bg-red-100 px-1.5 py-0.5 rounded">Overdue</span>
+                          )}
+                          {entry.status === 'paid' && (
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">Paid</span>
+                          )}
+                        </div>
+                        <p className={`text-[11px] ${entry.status === 'overdue' ? 'text-red-600 font-medium' : 'text-slate-500'}`}>{new Intl.DateTimeFormat(getCurrencyConfig(currencyCode).locale, { day: 'numeric', month: 'short' }).format(entry.dueDate)}</p>
                       </div>
-                      <p className="text-sm font-medium text-[#0D1F3C]">{formatCurrency(entry.amount, currencyCode)}</p>
+                      <p className={`text-sm font-medium ${entry.status === 'paid' ? 'text-emerald-700' : entry.status === 'overdue' ? 'text-red-700' : 'text-[#0D1F3C]'}`}>{formatCurrency(entry.amount, currencyCode)}</p>
                     </div>
                   ))}
                 </div>

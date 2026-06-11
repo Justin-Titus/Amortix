@@ -12,6 +12,7 @@ import {
   calculateAffordabilityScore,
   getAffordabilityZoneLabel,
   calculateStrategy,
+  getProjectedPayoffDate,
   type StrategyLoanInput,
 } from "@/lib/calculations";
 import { fadeUpVariants, pageTransition, staggerContainer } from "@/lib/animations";
@@ -111,9 +112,8 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       }
     : null;
 
-  const projectedMonths = totalEMI > 0 ? Math.max(1, Math.ceil(totalOutstanding / totalEMI)) : 0;
-  const debtFreeDate =
-    projectedMonths > 0 ? new Date(new Date().setMonth(new Date().getMonth() + projectedMonths)) : null;
+  const debtFreeDate = hasLoans ? getProjectedPayoffDate(loans) : null;
+  const projectedMonths = debtFreeDate ? Math.max(0, (debtFreeDate.getFullYear() - new Date().getFullYear()) * 12 + debtFreeDate.getMonth() - new Date().getMonth()) : 0;
 
 
   const distributionData = useMemo(() => {

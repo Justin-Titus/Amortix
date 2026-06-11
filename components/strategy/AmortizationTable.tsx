@@ -135,20 +135,40 @@ export default function AmortizationTable({ schedule, currencyCode = "INR" }: Am
                  <td className="px-4 py-3 border-r border-[var(--color-border)] font-currency font-medium text-[var(--color-navy)]">
                   {formatCurrency(row.totalDebtRemaining, currencyCode)}
                 </td>
-                {row.allocations.flatMap((a) => [
-                  <td key={`${row.month}-${a.loanId}-pay`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-navy)]">
-                    {formatCurrency(a.payment, currencyCode)}
-                  </td>,
-                  <td key={`${row.month}-${a.loanId}-prin`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-emerald)]">
-                    {formatCurrency(a.principal, currencyCode)}
-                  </td>,
-                  <td key={`${row.month}-${a.loanId}-int`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-amber)]">
-                    {formatCurrency(a.interest, currencyCode)}
-                  </td>,
-                  <td key={`${row.month}-${a.loanId}-bal`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-slate)]">
-                    {formatCurrency(a.remainingBalance, currencyCode)}
-                  </td>,
-                ])}
+                {schedule[0]?.allocations.flatMap((baseAlloc) => {
+                  const a = row.allocations.find(alloc => alloc.loanId === baseAlloc.loanId);
+                  if (a) {
+                    return [
+                      <td key={`${row.month}-${a.loanId}-pay`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-navy)]">
+                        {formatCurrency(a.payment, currencyCode)}
+                      </td>,
+                      <td key={`${row.month}-${a.loanId}-prin`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-emerald)]">
+                        {formatCurrency(a.principal, currencyCode)}
+                      </td>,
+                      <td key={`${row.month}-${a.loanId}-int`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-amber)]">
+                        {formatCurrency(a.interest, currencyCode)}
+                      </td>,
+                      <td key={`${row.month}-${a.loanId}-bal`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-slate)]">
+                        {formatCurrency(a.remainingBalance, currencyCode)}
+                      </td>,
+                    ];
+                  } else {
+                    return [
+                      <td key={`${row.month}-${baseAlloc.loanId}-pay`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-slate)] opacity-50">
+                        {formatCurrency(0, currencyCode)}
+                      </td>,
+                      <td key={`${row.month}-${baseAlloc.loanId}-prin`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-slate)] opacity-50">
+                        {formatCurrency(0, currencyCode)}
+                      </td>,
+                      <td key={`${row.month}-${baseAlloc.loanId}-int`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-slate)] opacity-50">
+                        {formatCurrency(0, currencyCode)}
+                      </td>,
+                      <td key={`${row.month}-${baseAlloc.loanId}-bal`} className="px-4 py-3 border-r border-[var(--color-border)] font-currency text-[var(--color-slate)] opacity-50">
+                        {formatCurrency(0, currencyCode)}
+                      </td>,
+                    ];
+                  }
+                })}
               </tr>
             ))}
           </tbody>

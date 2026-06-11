@@ -43,7 +43,7 @@ export default function InterestLeakDetector({
       <div className="mb-4">
         <h2 className="flex items-center gap-2 text-base font-heading font-medium text-amortix-navy">
           <AlertTriangle className="h-5 w-5 text-amortix-amber" />
-          Interest Leak Detector
+          Avoidable Interest Analysis
         </h2>
         <p className="mt-1 text-[11px] text-amortix-slate">
           Monthly interest bleeding from each loan
@@ -81,7 +81,7 @@ export default function InterestLeakDetector({
       </div>
 
       <div className="mt-2 flex items-center justify-between border-t border-amortix-border-light pt-4">
-        <span className="text-sm text-amortix-slate">Total monthly interest paid:</span>
+        <span className="text-sm text-amortix-slate">Monthly Interest Cost:</span>
         <span className="num text-lg font-medium text-amortix-red">
           {formatCurrency(totalInterestPerMonth, currencyCode)}
         </span>

@@ -20,7 +20,7 @@ import { Card } from "@/components/ui/Card";
 
 export const metadata = {
   title: "Insights ",
-  description: "See your portfolio risk, interest leak hotspots, and the highest-priority actions.",
+  description: "See your portfolio risk, avoidable interest hotspots, and the highest-priority actions.",
 };
 
 export const dynamic = "force-dynamic";
@@ -136,7 +136,7 @@ export default async function InsightsPage() {
           <EmptyState
             icon={<Sparkles className="h-5 w-5 text-slate-400" />}
             title="Add a loan to unlock insights"
-            description="Insights are generated from your live loan data. Add your first loan to see risk watchlists and leak detection." 
+            description="Insights are generated from your live loan data. Add your first loan to see risk watchlists and avoidable interest detection." 
             action={{ label: "Add your first loan", href: "/loans/add" }}
           />
         </Card>
@@ -186,7 +186,7 @@ export default async function InsightsPage() {
 
           <div className="grid gap-4">
             <LockedSection title="Health trend chart" description="Unlocks after your first monthly snapshot" />
-            <LockedSection title="Interest leak detector" description="Unlocks once loans and profile are complete" />
+            <LockedSection title="Avoidable interest analysis" description="Unlocks once loans and profile are complete" />
             <LockedSection title="Default risk scores" description="Unlocks once loans and profile are complete" />
           </div>
         </div>

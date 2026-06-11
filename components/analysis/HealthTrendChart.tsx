@@ -76,7 +76,7 @@ export function getTrendInsight(snapshots: HealthSnapshotPoint[]): string {
   }
 
   if (deltaScore < -5) {
-    return `Your health score dropped ${Math.abs(deltaScore).toFixed(0)} points. Consider identifying interest leaks.`;
+    return `Your health score dropped ${Math.abs(deltaScore).toFixed(0)} points. Consider identifying avoidable interest costs.`;
   }
 
   if (deltaDTI < -5) {
@@ -151,17 +151,17 @@ export default function HealthTrendChart({ snapshots }: { snapshots: HealthSnaps
 
   if (processedSnapshots.length < 2) {
     return (
-      <div className="card">
-        <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="card transition-all duration-300">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-[13px] font-medium text-amortix-navy">Financial health over time</h2>
+            <h2 className="text-sm font-medium text-amortix-navy">Financial health over time</h2>
             <p className="text-[11px] text-amortix-slate">History builds as you use Amortix</p>
           </div>
           <div className="h-1.5 w-24 overflow-hidden rounded-full bg-amortix-frost">
             <div className="h-full w-1/3 animate-pulse rounded-full bg-amortix-emerald" />
           </div>
         </div>
-        <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-amortix-border-light bg-amortix-frost/30">
+        <div className="flex h-[288px] items-center justify-center rounded-2xl border border-dashed border-amortix-border-light bg-amortix-frost/30">
           <p className="text-xs text-amortix-slate">Need at least 2 monthly snapshots to show trend</p>
         </div>
       </div>

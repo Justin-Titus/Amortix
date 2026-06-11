@@ -100,9 +100,9 @@ export default async function AnalysisPage() {
               valueColor={surplus < 0 ? 'red' : 'emerald'}
             />
             <MetricCard
-              label="Interest leak"
+              label="Monthly interest cost"
               value={formatCurrency(totalInterestPerMonth, currencyCode)}
-              description="Monthly interest paid"
+              description="Total interest expense"
               valueColor="amber"
             />
             <MetricCard
