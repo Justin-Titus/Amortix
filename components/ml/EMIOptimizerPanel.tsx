@@ -46,7 +46,7 @@ export default function EMIOptimizerPanel({
     <div className="card space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amortix-emerald">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amortix-emerald">
             Smart Engine
           </div>
           <h3 className="mt-2 text-sm font-medium text-amortix-navy">Smart Payment Engine</h3>

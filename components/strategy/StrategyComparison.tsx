@@ -145,6 +145,7 @@ export default function StrategyComparison({
                 />
               ))}
             </div>
+            {/* Identical strategy results explanation moved below interest chart */}
           </div>
         </div>
 
@@ -178,6 +179,20 @@ export default function StrategyComparison({
               </p>
             </div>
           </div>
+
+          {loans.length >= 2 && (
+            <div className="rounded-xl bg-emerald-50/80 p-4 border border-emerald-100 flex items-start gap-3 mt-2">
+              <div className="bg-emerald-100 p-1.5 rounded-full shrink-0 mt-0.5">
+                <Zap className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-emerald-900">The "Rollover" Magic</h4>
+                <p className="mt-1 text-xs text-emerald-800/90 leading-relaxed">
+                  How are you saving so much without adding extra budget? When one loan finishes, its monthly payment is automatically <strong>rolled over</strong> into your next loan. You keep paying the exact same total amount out-of-pocket every month, but you crush your debt years earlier!
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="section-block flex flex-col p-5">
             <div className="mb-6 flex items-center justify-between">
@@ -213,6 +228,17 @@ export default function StrategyComparison({
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
+            {avalanche.totalInterestPaid === snowball.totalInterestPaid && avalanche.totalInterestPaid === hybrid.totalInterestPaid && (
+              <div className="mt-6 rounded-xl bg-blue-50 p-4 border border-blue-100 flex items-start gap-3 animate-fade-in">
+                <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-medium text-blue-900">Why are the results identical?</h4>
+                  <p className="mt-1 text-xs text-blue-700 leading-relaxed">
+                    Your smallest balance loan also has the highest interest rate! Because of this, both Avalanche and Snowball target the exact same loan first, producing identical payoff paths.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
 

@@ -258,7 +258,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
         <MetricCard
           label="Debt-free by"
           value={debtFreeDate ? debtFreeDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" }) : "-"}
-          description={debtFreeDate ? "With current strategy" : "Add loans to see this"}
+          description={debtFreeDate ? "Baseline strategy" : "Add loans to see this"}
           valueColor={debtFreeDate ? "amber" : "muted"}
           isEmpty={!hasLoans}
         />
