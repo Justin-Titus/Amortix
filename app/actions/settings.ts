@@ -70,6 +70,8 @@ const settingsSchema = z.object({
   employmentType: z.enum(["SALARIED", "SELF_EMPLOYED", "STUDENT", "BUSINESS_OWNER", "OTHER"]).optional(),
   hasEmergencyFund: z.boolean().optional(),
   emergencyFundMonths: z.number().min(0).max(120).optional(),
+  emailNotifications: z.boolean().optional(),
+  pushNotifications: z.boolean().optional(),
 });
 
 type ExistingFinancialProfile = {
@@ -111,11 +113,16 @@ export async function updateUserSettings(data: z.infer<typeof settingsSchema>) {
       where: { userId: user.id },
     }))) as ExistingFinancialProfile;
 
-    // Update user name
-    if (validData.name !== undefined) {
+    // Update user properties
+    const userUpdateData: any = {};
+    if (validData.name !== undefined) userUpdateData.name = validData.name;
+    if (validData.emailNotifications !== undefined) userUpdateData.emailNotifications = validData.emailNotifications;
+    if (validData.pushNotifications !== undefined) userUpdateData.pushNotifications = validData.pushNotifications;
+
+    if (Object.keys(userUpdateData).length > 0) {
       await withSettingsDbGuard(() => prisma.user.update({
         where: { id: user.id },
-        data: { name: validData.name },
+        data: userUpdateData,
       }));
     }
 

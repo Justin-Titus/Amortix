@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { env } from "@/lib/env";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -61,6 +62,7 @@ export default function RootLayout({
     <html lang="en" className="h-full" data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col antialiased">
         {children}
+        <Toaster richColors position="top-right" />
         <Analytics />
         <SpeedInsights />
       </body>

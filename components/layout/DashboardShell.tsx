@@ -8,6 +8,7 @@ import { BotMessageSquare } from "lucide-react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import { useAutoSync } from "@/hooks/useAutoSync";
 
 export default function DashboardShell({
   children,
@@ -18,6 +19,8 @@ export default function DashboardShell({
   const pathname = usePathname();
   const reduce = useReducedMotion();
   const contentRef = useRef<HTMLDivElement | null>(null);
+
+  useAutoSync(5000); // Poll every 5 seconds
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });

@@ -45,21 +45,29 @@ const pageContextMap: Record<string, string> = {
 export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: DashboardHeaderProps) {
   const [user, setUser] = useState<User | null>(null);
   
-  useEffect(() => {
-    const getUser = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    getUser();
-  }, []);
-
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const initData = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      
+      // Also pre-fetch notifications so the unread dot is accurate before opening the menu
+      try {
+        const items = await getUserNotifications();
+        setNotifications(items);
+      } catch (error) {
+        console.error("Unable to load initial notifications:", error);
+      }
+    };
+    initData();
+  }, [pathname]);
 
   const pageTitle = Object.entries(pageTitleMap).find(([route]) => pathname === route || pathname.startsWith(`${route}/`))?.[1] ?? "Amortix";
   const pageContext = Object.entries(pageContextMap).find(([route]) => pathname === route || pathname.startsWith(`${route}/`))?.[1] ?? "Workspace";

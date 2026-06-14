@@ -43,7 +43,8 @@ export default function AffordabilityGauge({ score }: AffordabilityGaugeProps) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           initial={reduce ? false : { strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: progress }}
+          whileInView={{ strokeDashoffset: progress }}
+          viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.9, ease: "easeOut" }}
           aria-hidden="true"
         />

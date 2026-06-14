@@ -23,6 +23,8 @@ model User {
   financialProfile   FinancialProfile?
   rateLimits         RateLimit[]
   notifications      Notification[]
+  emailNotifications Boolean             @default(true)
+  pushNotifications  Boolean             @default(true)
   expoPushToken      String?
 }
 

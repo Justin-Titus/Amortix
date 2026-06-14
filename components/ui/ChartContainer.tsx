@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import { SkeletonBlock } from "./Skeletons";
+import { useInView } from "framer-motion";
 
 interface ChartContainerProps {
   /** Chart content to render */
@@ -42,6 +43,8 @@ export function ChartContainer({
   showSkeleton = true,
 }: ChartContainerProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   useEffect(() => {
     // Defer chart render to next tick to ensure layout is ready
@@ -55,9 +58,10 @@ export function ChartContainer({
     minHeight: `${minHeight}px`,
   };
 
-  if (!isMounted) {
+  if (!isMounted || !isInView) {
     return (
       <div
+        ref={ref}
         className={`w-full min-w-0 ${className}`}
         style={containerStyle}
         aria-busy="true"
@@ -66,7 +70,6 @@ export function ChartContainer({
         {showSkeleton ? (
           <div className="flex h-full w-full items-center justify-center p-6">
             <SkeletonBlock className="h-full w-full max-w-3xl rounded-xl" />
-
           </div>
         ) : null}
       </div>
@@ -75,6 +78,7 @@ export function ChartContainer({
 
   return (
     <div
+      ref={ref}
       className={`w-full min-w-0 ${className}`}
       style={containerStyle}
     >

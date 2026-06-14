@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { useInView } from "framer-motion";
 
 type DebtDistributionProps = {
   loans: Array<{
@@ -13,13 +14,16 @@ type DebtDistributionProps = {
 
 export default function DebtDistributionChart({ loans }: DebtDistributionProps) {
   const total = loans.reduce((sum, loan) => sum + loan.balance, 0);
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   if (total === 0) return null;
 
   return (
-    <div className="flex flex-row items-center gap-8 mt-6 min-h-[170px]">
+    <div ref={ref} className="flex flex-row items-center gap-5 mt-6 min-h-[170px]">
       <div className="relative w-44 h-44 flex-shrink-0">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        {isInView && (
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <PieChart>
             <Pie
               data={loans}
@@ -50,6 +54,7 @@ export default function DebtDistributionChart({ loans }: DebtDistributionProps) 
             />
           </PieChart>
         </ResponsiveContainer>
+        )}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none mt-0.5">
           <p className="text-[10px] font-medium text-amortix-slate uppercase tracking-wider leading-none mb-1.5">Total</p>
           <p className="num text-[20px] font-medium text-amortix-navy leading-none">
@@ -58,7 +63,7 @@ export default function DebtDistributionChart({ loans }: DebtDistributionProps) 
         </div>
       </div>
 
-      <div className="flex-1 space-y-4 max-w-[200px]">
+      <div className="flex-1 min-w-0 space-y-4">
         {loans.map((loan, index) => (
           <div key={index} className="flex items-start gap-3.5 group">
             <span 

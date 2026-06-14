@@ -334,21 +334,6 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
               <AIInsightCard insight={insightText} />
             </motion.div>
 
-            <motion.div variants={fadeUpVariants} custom={3} className="card flex items-start gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 shadow-sm transition-all hover:bg-emerald-100">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-[13px] font-medium text-amortix-navy">Deep analysis workspace</h2>
-                <p className="mt-1 text-[12px] leading-6 text-amortix-slate">
-                  Get real-time debt health signals, detect interest leaks, and review your financial profile.
-                </p>
-                <Link href="/analysis" className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-amortix-emerald hover:text-emerald-700">
-                  Open analysis
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            </motion.div>
           </motion.div>
 
           <motion.div variants={staggerContainer} initial={reduce ? false : "hidden"} animate="visible" className="space-y-4">
@@ -396,6 +381,22 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
               </div>
 
               <DebtDistributionChart loans={distributionData} />
+            </motion.div>
+
+            <motion.div variants={fadeUpVariants} custom={2} className="card flex items-start gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 shadow-sm transition-all hover:bg-emerald-100">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-[13px] font-medium text-amortix-navy">Deep analysis workspace</h2>
+                <p className="mt-1 text-[12px] leading-6 text-amortix-slate">
+                  Get real-time debt health signals, detect interest leaks, and review your financial profile.
+                </p>
+                <Link href="/analysis" className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-amortix-emerald hover:text-emerald-700">
+                  Open analysis
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
             </motion.div>
           </motion.div>
         </section>

@@ -5,6 +5,8 @@ import { User } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { FinancialProfileForm } from "@/components/dashboard/FinancialProfileForm";
 
+import { NotificationPreferencesForm } from "@/components/dashboard/NotificationPreferencesForm";
+
 const UNAUTHORIZED_TEXT = "Unauthorized";
 const DB_UNAVAILABLE_TEXT = "DatabaseUnavailable";
 
@@ -16,6 +18,8 @@ export const metadata = {
 type ProfileUser = {
   name: string | null;
   email: string | null;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
   financialProfile: {
     monthlyIncome?: number | null;
     monthlyExpenses?: number | null;
@@ -125,6 +129,13 @@ export default async function ProfilePage() {
 
         <ProfileSection title="Financial profile" description="Used for risk scoring and AI analysis">
           <FinancialProfileForm defaultValues={defaultValues} />
+        </ProfileSection>
+
+        <ProfileSection title="Notification preferences" description="Manage how Amortix contacts you">
+          <NotificationPreferencesForm 
+            emailNotifications={user.emailNotifications ?? true} 
+            pushNotifications={user.pushNotifications ?? true} 
+          />
         </ProfileSection>
 
         <ProfileSection title="Account actions" description="Irreversible operations">

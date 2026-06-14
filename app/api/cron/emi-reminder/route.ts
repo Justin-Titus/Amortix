@@ -73,13 +73,15 @@ export async function GET(req: NextRequest) {
         });
 
         // 4a. Send Email Reminder
-        await sendEmiReminderEmail(
-          loan.user.email,
-          loan.name,
-          loan.emiAmount,
-          formattedDueDate,
-          loan.user.name || "there"
-        );
+        if (loan.user.emailNotifications) {
+          await sendEmiReminderEmail(
+            loan.user.email,
+            loan.name,
+            loan.emiAmount,
+            formattedDueDate,
+            loan.user.name || "there"
+          );
+        }
 
         // 4b. Create In-App Notification (and send Mobile Push Notification if token exists)
         const formattedAmount = new Intl.NumberFormat("en-IN", {
@@ -88,13 +90,15 @@ export async function GET(req: NextRequest) {
           minimumFractionDigits: 0,
         }).format(loan.emiAmount);
         
-        await sendPushNotification(
-          loan.user.id,
-          "EMI Reminder 🔔",
-          `Your ${loan.name} EMI of ${formattedAmount} is due in 3 days on ${formattedDueDate}.`,
-          "emi_reminder",
-          `/loans/${loan.id}`
-        );
+        if (loan.user.pushNotifications) {
+          await sendPushNotification(
+            loan.user.id,
+            "EMI Reminder 🔔",
+            `Your ${loan.name} EMI of ${formattedAmount} is due in 3 days on ${formattedDueDate}.`,
+            "emi_reminder",
+            `/loans/${loan.id}`
+          );
+        }
 
         sentCount++;
       } catch (err: any) {
