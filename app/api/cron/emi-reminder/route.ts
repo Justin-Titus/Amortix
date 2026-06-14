@@ -21,27 +21,27 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 2. Calculate the date window (exactly 3 days from today)
+    // 2. Calculate the date window (from today to 3 days out)
     const today = new Date();
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + 3);
+    
+    const startOfWindow = new Date(today);
+    startOfWindow.setHours(0, 0, 0, 0);
 
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    const threeDaysOut = new Date(today);
+    threeDaysOut.setDate(today.getDate() + 3);
+    const endOfWindow = new Date(threeDaysOut);
+    endOfWindow.setHours(23, 59, 59, 999);
 
     console.log(
-      `Running EMI Reminder CRON. Searching for EMIs due between ${startOfDay.toISOString()} and ${endOfDay.toISOString()}`
+      `Running EMI Reminder CRON. Searching for EMIs due between ${startOfWindow.toISOString()} and ${endOfWindow.toISOString()}`
     );
 
-    // 3. Find all loans with nextEmiDate in that 24-hour window
+    // 3. Find all loans with nextEmiDate in that window (today to 3 days out)
     const upcomingLoans = await prisma.loan.findMany({
       where: {
         nextEmiDate: {
-          gte: startOfDay,
-          lte: endOfDay,
+          gte: startOfWindow,
+          lte: endOfWindow,
         },
       },
       include: {
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     if (upcomingLoans.length === 0) {
       return NextResponse.json({
         success: true,
-        message: "No EMIs due in exactly 3 days.",
+        message: "No EMIs due today or in the next 3 days.",
         sentCount: 0,
       });
     }
@@ -62,11 +62,20 @@ export async function GET(req: NextRequest) {
     const errors: string[] = [];
 
     for (const loan of upcomingLoans) {
-      if (!loan.user.email) continue;
+      if (!loan.user.email || !loan.nextEmiDate) continue;
 
       try {
+        // Calculate days left relative to today, ignoring time part
+        const d1 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const d2 = new Date(loan.nextEmiDate.getFullYear(), loan.nextEmiDate.getMonth(), loan.nextEmiDate.getDate());
+        const diffTime = d2.getTime() - d1.getTime();
+        const daysLeft = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        // Skip if outside 0-3 range (safety check)
+        if (daysLeft < 0 || daysLeft > 3) continue;
+
         // Format the date for the email (e.g. "Oct 15, 2023")
-        const formattedDueDate = loan.nextEmiDate!.toLocaleDateString("en-IN", {
+        const formattedDueDate = loan.nextEmiDate.toLocaleDateString("en-IN", {
           year: "numeric",
           month: "short",
           day: "numeric",
@@ -79,6 +88,7 @@ export async function GET(req: NextRequest) {
             loan.name,
             loan.emiAmount,
             formattedDueDate,
+            daysLeft,
             loan.user.name || "there"
           );
         }
@@ -89,12 +99,14 @@ export async function GET(req: NextRequest) {
           currency: "INR",
           minimumFractionDigits: 0,
         }).format(loan.emiAmount);
+
+        const dayWord = daysLeft === 0 ? "today" : daysLeft === 1 ? "tomorrow" : `in ${daysLeft} days`;
         
         if (loan.user.pushNotifications) {
           await sendPushNotification(
             loan.user.id,
             "EMI Reminder 🔔",
-            `Your ${loan.name} EMI of ${formattedAmount} is due in 3 days on ${formattedDueDate}.`,
+            `Your ${loan.name} EMI of ${formattedAmount} is due ${dayWord} on ${formattedDueDate}.`,
             "emi_reminder",
             `/loans/${loan.id}`
           );
