@@ -17,8 +17,21 @@ export default function AuthSplitLayout({ children }: AuthSplitLayoutProps) {
 
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center gap-3 text-white">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 overflow-hidden">
-                <Image src="/Amortix.png" alt="Amortix logo" width={48} height={48} className="h-full w-full object-contain" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+                <div
+                  className="h-full w-full"
+                  style={{
+                    backgroundColor: "#00bc7d",
+                    maskImage: "url(/Amortix.png)",
+                    WebkitMaskImage: "url(/Amortix.png)",
+                    maskSize: "contain",
+                    WebkitMaskSize: "contain",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskPosition: "center",
+                    WebkitMaskPosition: "center",
+                  }}
+                />
               </div>
               <div>
                 <span className="block font-heading text-2xl font-medium">Amortix</span>

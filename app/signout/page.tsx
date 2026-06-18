@@ -20,8 +20,21 @@ export default function SignOutPage() {
             </div>
 
             <div className="flex items-start gap-5">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/5 ring-1 ring-white/10">
-                <Image src="/Amortix.png" alt="Amortix logo" width={56} height={56} className="h-12 w-12 object-contain" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/5 border border-white/10 overflow-hidden">
+                <div
+                  className="h-12 w-12"
+                  style={{
+                    backgroundColor: "#00bc7d",
+                    maskImage: "url(/Amortix.png)",
+                    WebkitMaskImage: "url(/Amortix.png)",
+                    maskSize: "contain",
+                    WebkitMaskSize: "contain",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskPosition: "center",
+                    WebkitMaskPosition: "center",
+                  }}
+                />
               </div>
               <div className="max-w-xl">
                 <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Amortix</p>

@@ -104,7 +104,7 @@ export default function LoginForm({
                 htmlFor="login-email"
                 className="block text-[13px] font-semibold text-[var(--color-navy)] uppercase tracking-wide mb-2"
               >
-                Email Reference
+                Email address
               </label>
               <div className="relative group">
                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
@@ -116,7 +116,7 @@ export default function LoginForm({
                   autoComplete="email"
                   {...register("email")}
                   className="w-full h-13 rounded-2xl border border-amortix-border-mid bg-white/80 pl-10 pr-4 text-sm text-[var(--color-navy)] placeholder:text-slate-400 outline-none transition-all focus:border-amortix-emerald focus:ring-4 focus:ring-amortix-emerald/10"
-                  placeholder="you@amortix.app"
+                  placeholder="you@example.com"
                 />
               </div>
               {errors.email && (
@@ -133,7 +133,7 @@ export default function LoginForm({
                   htmlFor="login-password"
                   className="block text-[13px] font-semibold text-[var(--color-navy)] uppercase tracking-wide"
                 >
-                  Cipher Key
+                  Password
                 </label>
                 <Link href="/forgot-password" className="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
                   Forgot password?

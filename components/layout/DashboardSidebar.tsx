@@ -56,8 +56,21 @@ export default function DashboardSidebar({ mobile = false, onNavigate }: Dashboa
       <div className="sidebar-surface flex h-full flex-col overflow-hidden px-3 py-3">
         <div className="flex items-center gap-3 border-b border-white/8 pb-4">
           <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] overflow-hidden">
-              <Image src="/Amortix.png" alt="Amortix logo" width={44} height={44} className="h-full w-full object-contain" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+              <div
+                className="h-full w-full"
+                style={{
+                  backgroundColor: "#00bc7d",
+                  maskImage: "url(/Amortix.png)",
+                  WebkitMaskImage: "url(/Amortix.png)",
+                  maskSize: "contain",
+                  WebkitMaskSize: "contain",
+                  maskRepeat: "no-repeat",
+                  WebkitMaskRepeat: "no-repeat",
+                  maskPosition: "center",
+                  WebkitMaskPosition: "center",
+                }}
+              />
             </div>
             <div>
               <span className="block font-heading text-lg font-medium text-slate-100">Amortix</span>

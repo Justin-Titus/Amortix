@@ -169,7 +169,7 @@ export default function RegisterForm() {
               autoComplete="name"
               {...register("name")}
               className="input"
-              placeholder="John Doe"
+              placeholder="Your full name"
             />
             {errors.name && (
               <p className="text-[var(--color-danger)] text-xs mt-1">
