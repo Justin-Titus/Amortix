@@ -6,6 +6,8 @@ import { PageHero } from "@/components/layout/PageHero";
 import { EmptyState } from "@/components/ui/EmptyState";
 import CalendarControls from "@/components/loans/CalendarControls";
 import { formatCurrency, getCurrencyConfig, buildCalendarData, formatDateKey, RawLoan } from "@/lib/calculations";
+import Link from "next/link";
+import { buildLoanPath } from "@/lib/loans/url";
 
 type LoanCalendarProps = {
   loans: RawLoan[];
@@ -213,9 +215,13 @@ export default function LoanCalendar({ loans, initialMonth, currencyCode = "INR"
 
               <div className="mt-3 space-y-3">
                 {selectedDay.loans.map((l) => (
-                  <div key={l.loanId} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
+                  <Link
+                    key={l.loanId}
+                    href={buildLoanPath(l.loanName, l.loanId)}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 hover:bg-slate-100/80 transition-colors cursor-pointer"
+                  >
                     <div>
-                      <p className="text-sm text-[#0D1F3C]">{l.loanName}</p>
+                      <p className="text-sm text-[#0D1F3C] font-medium">{l.loanName}</p>
                       <p className="text-[11px] text-slate-500">{formatCurrency(l.emiAmount, currencyCode)}</p>
                     </div>
                     <div className="text-right">
@@ -226,7 +232,7 @@ export default function LoanCalendar({ loans, initialMonth, currencyCode = "INR"
                         Due {formatCurrency(Math.max(0, l.emiAmount - l.paidAmount), currencyCode, { compact: true })} • {l.status.toUpperCase()}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -238,7 +244,17 @@ export default function LoanCalendar({ loans, initialMonth, currencyCode = "INR"
                 <p className="text-sm font-medium text-[#0D1F3C]">This month's dues</p>
                 <div className="mt-3 space-y-3">
                   {dueThisMonth.map((entry) => (
-                    <div key={`${entry.loanId}-${entry.dueDate.toISOString()}`} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-3 ${entry.status === 'paid' ? 'bg-emerald-50 opacity-80' : entry.status === 'overdue' ? 'bg-red-50' : 'bg-slate-50'}`}>
+                    <Link
+                      key={`${entry.loanId}-${entry.dueDate.toISOString()}`}
+                      href={buildLoanPath(entry.loanName, entry.loanId)}
+                      className={`flex items-center justify-between gap-3 rounded-xl px-3 py-3 transition-all cursor-pointer ${
+                        entry.status === 'paid'
+                          ? 'bg-emerald-50 hover:bg-emerald-100/80 opacity-80'
+                          : entry.status === 'overdue'
+                          ? 'bg-red-50 hover:bg-red-100/80'
+                          : 'bg-slate-50 hover:bg-slate-100'
+                      }`}
+                    >
                       <div>
                         <div className="flex items-center gap-2">
                           <p className={`text-sm ${entry.status === 'paid' ? 'text-emerald-900 line-through' : entry.status === 'overdue' ? 'text-red-900 font-semibold' : 'text-[#0D1F3C]'}`}>{entry.loanName}</p>
@@ -252,7 +268,7 @@ export default function LoanCalendar({ loans, initialMonth, currencyCode = "INR"
                         <p className={`text-[11px] ${entry.status === 'overdue' ? 'text-red-600 font-medium' : 'text-slate-500'}`}>{new Intl.DateTimeFormat(getCurrencyConfig(currencyCode).locale, { day: 'numeric', month: 'short' }).format(entry.dueDate)}</p>
                       </div>
                       <p className={`text-sm font-medium ${entry.status === 'paid' ? 'text-emerald-700' : entry.status === 'overdue' ? 'text-red-700' : 'text-[#0D1F3C]'}`}>{formatCurrency(entry.amount, currencyCode)}</p>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

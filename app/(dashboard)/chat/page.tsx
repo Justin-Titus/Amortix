@@ -17,6 +17,7 @@ type ChatSearchParams = {
 export default async function ChatPage({ searchParams }: { searchParams: Promise<ChatSearchParams> }) {
   const params = await searchParams;
   const loans = await getLoans();
+  const activeLoans = loans.filter((loan) => loan.outstandingBalance > 0);
   const selectedPrompt = Array.isArray(params.prompt) ? params.prompt[0] : params.prompt;
 
   const quickPrompts = [
@@ -77,7 +78,7 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
       </aside>
 
       <div>
-        {loans.length === 0 ? (
+        {activeLoans.length === 0 ? (
           <div className="mb-4 rounded-2xl border border-[#E2E8F0] bg-white">
             <EmptyState
               variant="compact"

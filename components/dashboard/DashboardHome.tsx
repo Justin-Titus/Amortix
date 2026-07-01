@@ -75,6 +75,9 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       ? loans.reduce((sum, loan) => sum + loan.interestRate * loan.outstandingBalance, 0) / totalOutstanding
       : 0;
 
+  const activeLoans = useMemo(() => loans.filter((l) => l.outstandingBalance > 0), [loans]);
+  const hasLoans = activeLoans.length > 0;
+
   const affordability = useMemo(() => {
     if (
       !profile?.monthlyIncome ||
@@ -92,16 +95,15 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       creditScoreRange: profile.creditScoreRange ?? "Not provided",
       hasEmergencyFund: Boolean(profile.hasEmergencyFund),
       emergencyFundMonths: profile.emergencyFundMonths ?? 0,
-      loans: loans.map((loan) => ({
+      loans: activeLoans.map((loan) => ({
         annualRate: loan.interestRate,
         tenureMonths: loan.tenureMonths,
         rateType: loan.rateType,
       })),
     });
-  }, [loans, profile, totalEMI]);
+  }, [activeLoans, profile, totalEMI]);
 
   const affordabilityScore = affordability?.score ?? null;
-  const hasLoans = loans.length > 0;
   const hasAffordability = affordabilityScore !== null;
   const leakProfile = profile && profile.monthlyIncome != null && profile.monthlyExpenses != null
     ? {
@@ -112,7 +114,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       }
     : null;
 
-  const debtFreeDate = hasLoans ? getProjectedPayoffDate(loans) : null;
+  const debtFreeDate = hasLoans ? getProjectedPayoffDate(activeLoans) : null;
   const projectedMonths = debtFreeDate ? Math.max(0, (debtFreeDate.getFullYear() - new Date().getFullYear()) * 12 + debtFreeDate.getMonth() - new Date().getMonth()) : 0;
 
 
@@ -151,7 +153,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
   const getDynamicInsight = (): string => {
     if (!hasLoans) return "Add your first loan to begin tracking repayment momentum.";
 
-    const highest = loans.reduce((best, candidate) => (best.interestRate > candidate.interestRate ? best : candidate));
+    const highest = activeLoans.reduce((best, candidate) => (best.interestRate > candidate.interestRate ? best : candidate), activeLoans[0]);
 
     if (emiToIncomeRatio > 45) {
       return `Your EMI load is at ${emiToIncomeRatio}% of income, which is above the 40% comfort zone.`;
@@ -165,8 +167,8 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       return "Add your first loan to begin tracking repayment momentum, run comparisons, and access personalized AI insights.";
     }
 
-    const highest = loans.reduce((best, candidate) => 
-      candidate.interestRate > best.interestRate ? candidate : best, loans[0]
+    const highest = activeLoans.reduce((best, candidate) => 
+      candidate.interestRate > best.interestRate ? candidate : best, activeLoans[0]
     );
 
     if (emiToIncomeRatio > 40) {
@@ -177,15 +179,15 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       return `Targeting your payoff strategy around the "${highest.name}" loan at ${highest.interestRate}% could save you thousands in interest over the lifetime of the debt.`;
     }
 
-    if (loans.length > 1) {
-      return `You have ${loans.length} active loans. Repaying the highest-rate balance first using the Avalanche strategy will mathematically save you the most interest and shorten your payoff.`;
+    if (activeLoans.length > 1) {
+      return `You have ${activeLoans.length} active loans. Repaying the highest-rate balance first using the Avalanche strategy will mathematically save you the most interest and shorten your payoff.`;
     }
 
     return `By allocating an additional ₹5,000 toward your outstanding debt, you can shorten your payoff horizon and clear the balance much faster.`;
-  }, [hasLoans, loans, emiToIncomeRatio]);
+  }, [hasLoans, activeLoans, emiToIncomeRatio]);
 
   const heroStats = [
-    { label: "Open loans", value: String(loans.length), muted: !hasLoans },
+    { label: "Open loans", value: String(activeLoans.length), muted: !hasLoans },
     { label: "Total outstanding", value: formatCompactCurrency(totalOutstanding, currencyCode), muted: !hasLoans },
     { label: "Affordability score", value: hasAffordability ? `${affordabilityScore}/100` : "-", muted: !hasAffordability, color: hasAffordability && affordabilityScore !== null ? affordabilityScore >= 70 ? "text-emerald-500" : affordabilityScore >= 40 ? "text-amber-500" : "text-red-500" : "text-slate-400" },
     { label: "Monthly snapshots", value: String(snapshotCount), muted: snapshotCount === 0 },
@@ -291,18 +293,18 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
                 </Link>
               </div>
 
-              {loans.length === 0 ? (
+              {activeLoans.length === 0 ? (
                 <div className="py-10">
                   <EmptyState
                     variant="compact"
-                    title="No loans yet"
-                    description="Add your first loan to start tracking repayment progress and unlock personalized AI insights."
+                    title="No active loans yet"
+                    description="Add a loan or open one to start tracking repayment progress and unlock insights."
                     action={{ label: "Add your first loan", href: "/loans/add" }}
                   />
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {loans.map((loan, index) => {
+                  {activeLoans.map((loan, index) => {
                     const paidPercentForLoan = Math.max(
                       0,
                       Math.min(100, ((loan.principal - loan.outstandingBalance) / Math.max(loan.principal, 1)) * 100)

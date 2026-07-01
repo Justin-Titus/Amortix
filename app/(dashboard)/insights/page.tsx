@@ -55,17 +55,18 @@ export default async function InsightsPage() {
   const typedProfile = profile;
   const currencyCode = (profile as any)?.currency ?? "INR";
 
-  const outstanding = loans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
-  const emi = loans.reduce((sum, loan) => sum + loan.emiAmount, 0);
+  const activeLoans = loans.filter((loan) => loan.outstandingBalance > 0);
+  const outstanding = activeLoans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
+  const emi = activeLoans.reduce((sum, loan) => sum + loan.emiAmount, 0);
   const avgRate = outstanding > 0
-    ? loans.reduce((sum, loan) => sum + loan.interestRate * loan.outstandingBalance, 0) / outstanding
+    ? activeLoans.reduce((sum, loan) => sum + loan.interestRate * loan.outstandingBalance, 0) / outstanding
     : 0;
 
   const totals = { outstanding, emi, avgRate };
 
   const leaks = typedProfile
     ? detectInterestLeaks(
-        loans.map((loan) => ({
+        activeLoans.map((loan) => ({
           id: loan.id,
           name: loan.name,
           interestRate: loan.interestRate,
@@ -87,7 +88,7 @@ export default async function InsightsPage() {
     : [];
 
   const riskRows = typedProfile
-    ? loans
+    ? activeLoans
         .map((loan) => {
           const result = predictDefaultRisk({
             monthlyIncome: typedProfile.monthlyIncome,
@@ -104,7 +105,7 @@ export default async function InsightsPage() {
             emiAmount: loan.emiAmount,
             monthsActive: monthsSince(loan.startDate),
             totalMonthlyEMI: totals.emi,
-            numberOfActiveLoans: loans.length,
+            numberOfActiveLoans: activeLoans.length,
             debtToIncomeRatio: typedProfile.monthlyIncome > 0 ? totals.emi / typedProfile.monthlyIncome : 1,
           }, currencyCode);
 
@@ -118,7 +119,7 @@ export default async function InsightsPage() {
         .slice(0, 3)
     : [];
 
-  if (loans.length === 0) {
+  if (activeLoans.length === 0) {
     return (
       <PageWrapper>
         <PageHero
@@ -167,7 +168,7 @@ export default async function InsightsPage() {
             {[
               { label: "Add monthly income and expenses", done: false, href: "/profile" },
               { label: "Set your emergency fund status", done: false, href: "/profile" },
-              { label: "Add at least one loan", done: loans.length > 0, href: "/loans/add" },
+              { label: "Add at least one loan", done: activeLoans.length > 0, href: "/loans/add" },
 
             ].map(({ label, done, href }) => (
               <div key={label} className="flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0">

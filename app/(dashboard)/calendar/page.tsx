@@ -3,9 +3,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-
 import { redirect } from "next/navigation";
-
 
 export const metadata = {
   title: "EMI Calendar ",
@@ -13,7 +11,6 @@ export const metadata = {
 };
 
 export default async function CalendarPage() {
-
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -22,12 +19,11 @@ export default async function CalendarPage() {
   }
 
   const loans = await prisma.loan.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, outstandingBalance: { gt: 0 } },
     include: {
       payments: true,
     },
   });
-
 
   if (loans.length === 0) {
     return (
@@ -35,7 +31,7 @@ export default async function CalendarPage() {
         <EmptyState
           icon={<CalendarDays className="h-5 w-5 text-slate-400" />}
           title="No loan schedule yet"
-          description="Add at least one loan to see upcoming EMI due dates and monthly payment timelines."
+          description="Add at least one active loan to see upcoming EMI due dates and monthly payment timelines."
           action={{ label: "Add your first loan", href: "/loans/add" }}
         />
       </div>

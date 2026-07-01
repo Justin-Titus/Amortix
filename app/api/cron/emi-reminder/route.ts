@@ -21,7 +21,19 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 2. Calculate the date window (from today to 3 days out)
+    // 2a. Auto-purge old notifications (older than 30 days)
+    const purgeLimit = new Date();
+    purgeLimit.setDate(purgeLimit.getDate() - 30);
+    const purgeResult = await prisma.notification.deleteMany({
+      where: {
+        createdAt: {
+          lt: purgeLimit,
+        },
+      },
+    });
+    console.log(`Auto-purged ${purgeResult.count} notifications older than 30 days.`);
+
+    // 2b. Calculate the date window (from today to 3 days out)
     const today = new Date();
     
     const startOfWindow = new Date(today);

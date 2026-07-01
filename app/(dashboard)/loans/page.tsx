@@ -22,13 +22,14 @@ export default async function LoansPage() {
   const profile = user ? await prisma.financialProfile.findUnique({ where: { userId: user.id } }) : null;
   const currencyCode = profile?.currency ?? "INR";
 
-  const totalOutstanding = loans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
-  const totalEMI = loans.reduce((sum, loan) => sum + loan.emiAmount, 0);
+  const activeLoans = loans.filter((loan) => loan.outstandingBalance > 0);
+  const totalOutstanding = activeLoans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
+  const totalEMI = activeLoans.reduce((sum, loan) => sum + loan.emiAmount, 0);
   const weightedAverageRate =
     totalOutstanding > 0
-      ? loans.reduce((sum, loan) => sum + loan.interestRate * loan.outstandingBalance, 0) / totalOutstanding
+      ? activeLoans.reduce((sum, loan) => sum + loan.interestRate * loan.outstandingBalance, 0) / totalOutstanding
       : 0;
-  const highRateLoans = loans.filter((loan) => loan.interestRate >= 12).length;
+  const highRateLoans = activeLoans.filter((loan) => loan.interestRate >= 12).length;
 
   return (
     <div className="animate-fade-up space-y-8">
@@ -47,32 +48,32 @@ export default async function LoansPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <MetricCard
           label="Active loans"
-          value={loans.length}
+          value={activeLoans.length}
           description="Number of loans currently tracked"
-          isEmpty={loans.length === 0}
+          isEmpty={activeLoans.length === 0}
         />
         <MetricCard
           label="Outstanding"
           value={formatCurrency(totalOutstanding, currencyCode)}
           description="Total remaining balance"
-          isEmpty={loans.length === 0}
+          isEmpty={activeLoans.length === 0}
         />
         <MetricCard
           label="Monthly EMI"
           value={formatCurrency(totalEMI, currencyCode)}
           description="Estimated recurring payment"
-          isEmpty={loans.length === 0}
+          isEmpty={activeLoans.length === 0}
         />
         <MetricCard
           label="Avg rate"
           value={`${weightedAverageRate.toFixed(2)}%`}
           description="Weighted average interest rate"
-          isEmpty={loans.length === 0}
+          isEmpty={activeLoans.length === 0}
         />
       </div>
 
 
-      {loans.length === 0 ? (
+      {activeLoans.length === 0 ? (
         <div className="bg-white border border-[#E2E8F0] rounded-2xl">
           <EmptyState
             icon={<Info className="w-5 h-5 text-slate-400" />}
@@ -110,7 +111,7 @@ export default async function LoansPage() {
           </div>
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {loans.map((loan, index) => {
+            {activeLoans.map((loan, index) => {
               const loanColor = ["#059669", "#1E3A5F", "#F59E0B", "#378ADD", "#DC2626", "#34D399"][index % 6];
               const paidPercent = Math.round((1 - loan.outstandingBalance / Math.max(loan.principal, 1)) * 100);
 

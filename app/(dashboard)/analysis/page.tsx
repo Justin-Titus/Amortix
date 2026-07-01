@@ -45,16 +45,17 @@ export default async function AnalysisPage() {
   const profile = await prisma.financialProfile.findUnique({ where: { userId: supabaseUser.id } });
   const currencyCode = profile?.currency ?? "INR";
 
-  const pageHeroStats = buildLoanHeroStats(loans, currencyCode);
+  const activeLoans = loans.filter((loan) => loan.outstandingBalance > 0);
+  const pageHeroStats = buildLoanHeroStats(activeLoans, currencyCode);
 
   // Core metrics calculations
-  const totalOutstanding = loans.reduce((s, l) => s + l.outstandingBalance, 0);
-  const totalEMI = loans.reduce((s, l) => s + l.emiAmount, 0);
+  const totalOutstanding = activeLoans.reduce((s, l) => s + l.outstandingBalance, 0);
+  const totalEMI = activeLoans.reduce((s, l) => s + l.emiAmount, 0);
   const dti = profile?.monthlyIncome ? (totalEMI / profile.monthlyIncome) * 100 : 0;
   const surplus = profile ? (profile.monthlyIncome - profile.monthlyExpenses - totalEMI) : 0;
-  const highRiskLoans = loans.filter(l => l.interestRate >= 15);
+  const highRiskLoans = activeLoans.filter(l => l.interestRate >= 15);
   
-  const totalInterestPerMonth = loans.reduce((s, l) => {
+  const totalInterestPerMonth = activeLoans.reduce((s, l) => {
     const monthlyRate = l.interestRate / 12 / 100;
     return s + (l.outstandingBalance * monthlyRate);
   }, 0);
@@ -68,7 +69,7 @@ export default async function AnalysisPage() {
         stats={pageHeroStats}
       />
 
-      {loans.length === 0 ? (
+      {activeLoans.length === 0 ? (
         <div className="card flex flex-col items-center justify-center py-16 text-center">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amortix-emerald-bg text-amortix-emerald">
             <Sparkles className="h-6 w-6" />
@@ -115,7 +116,7 @@ export default async function AnalysisPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <InterestLeakDetector 
-              loans={loans.map(l => ({
+              loans={activeLoans.map(l => ({
                 id: l.id,
                 name: l.name,
                 outstandingBalance: l.outstandingBalance,
