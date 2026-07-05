@@ -3,6 +3,8 @@ import DashboardHome from "@/components/dashboard/DashboardHome";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 0;
+
 export const metadata = {
   title: "Dashboard ",
   description: "View your loan portfolio health, repayment progress, and monthly debt metrics.",

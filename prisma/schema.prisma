@@ -26,6 +26,7 @@ model User {
   emailNotifications Boolean             @default(true)
   pushNotifications  Boolean             @default(true)
   expoPushToken      String?
+  workspaces         WorkspaceMember[]
 }
 
 model FinancialProfile {
@@ -64,8 +65,11 @@ model Loan {
   user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   repaymentPlans     RepaymentPlan[]
   payments           Payment[]
+  workspaceId        String?
+  workspace          Workspace?      @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([workspaceId])
 }
 
 model Payment {
@@ -137,7 +141,7 @@ model HealthSnapshot {
   activeLoans        Int
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, capturedAt])
+  @@unique([userId, capturedAt])
 }
 
 model Notification {
@@ -182,5 +186,58 @@ enum EmploymentType {
   STUDENT
   BUSINESS_OWNER
   OTHER
+}
+
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String
+  createdBy   String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  members     WorkspaceMember[]
+  invites     WorkspaceInvite[]
+  loans       Loan[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(MEMBER)
+  joinedAt    DateTime      @default(now())
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model WorkspaceInvite {
+  id          String        @id @default(cuid())
+  workspaceId String
+  email       String
+  role        WorkspaceRole @default(MEMBER)
+  status      InviteStatus  @default(PENDING)
+  invitedBy   String
+  createdAt   DateTime      @default(now())
+  expiresAt   DateTime
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([email, status])
+  @@index([workspaceId])
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
 }
 

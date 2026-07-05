@@ -1,4 +1,8 @@
+"use client";
+
+import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/Card";
+import { hoverLift, pressScale, numberTickUp } from "@/lib/animations-extended";
 
 type MetricCardValueColor = "default" | "emerald" | "amber" | "red" | "muted";
 
@@ -30,10 +34,12 @@ export function MetricCard({
   const cardContent = (
     <Card
       className={`p-5 min-h-[110px] ${
-        onClick ? "cursor-pointer hover:border-amortix-emerald hover:shadow-[0_0_0_3px_rgba(17,140,118,0.08)]" : ""
+        onClick ? "cursor-pointer hover:border-amortix-emerald" : ""
       }`}
     >
-      <p className="mb-2 text-[11px] font-medium tracking-[0.025em] text-amortix-slate uppercase">{label}</p>
+      <p className="mb-2 text-[11px] font-medium tracking-[0.025em] text-amortix-slate uppercase">
+        {label}
+      </p>
       {isEmpty ? (
         <>
           <div className="mb-1.5 h-6 w-20 animate-pulse rounded bg-slate-100" />
@@ -41,8 +47,22 @@ export function MetricCard({
         </>
       ) : (
         <>
-          <p className={`mb-1 text-[22px] font-medium font-mono ${colorMap[valueColor]}`}>{value}</p>
-          {description ? <p className="text-[11px] leading-snug text-slate-500 line-clamp-2">{description}</p> : null}
+          {/* Animated number value — slides up when value changes */}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.p
+              key={String(value)}
+              variants={numberTickUp}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className={`mb-1 text-[22px] font-medium font-mono ${colorMap[valueColor]}`}
+            >
+              {value}
+            </motion.p>
+          </AnimatePresence>
+          {description ? (
+            <p className="text-[11px] leading-snug text-slate-500 line-clamp-2">{description}</p>
+          ) : null}
         </>
       )}
     </Card>
@@ -50,11 +70,21 @@ export function MetricCard({
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className="w-full text-left">
+      <motion.button
+        type="button"
+        onClick={onClick}
+        className="w-full text-left"
+        {...hoverLift}
+        {...pressScale}
+      >
         {cardContent}
-      </button>
+      </motion.button>
     );
   }
 
-  return cardContent;
+  return (
+    <motion.div {...hoverLift}>
+      {cardContent}
+    </motion.div>
+  );
 }

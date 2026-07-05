@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const withPWA = withPWAInit({
   dest: "public",
@@ -30,4 +31,21 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+const configWithPWA = withPWA(nextConfig);
+
+export default withSentryConfig(configWithPWA, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Silent in CI unless SENTRY_AUTH_TOKEN is set
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+
+  // Upload source maps only in production
+  widenClientFileUpload: true,
+  disableLogger: true,
+
+  // Don't block builds if Sentry is misconfigured
+  errorHandler(err: Error) {
+    console.warn("[Sentry] Build plugin warning:", err.message);
+  },
+});

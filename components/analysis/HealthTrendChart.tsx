@@ -194,6 +194,22 @@ export default function HealthTrendChart({ snapshots }: { snapshots: HealthSnaps
         </div>
       </div>
 
+      {/* Legend */}
+      <div className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-amortix-border-light pb-4">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#10B981]" />
+          <span className="text-[10px] font-medium text-amortix-slate">Health Score (Affordability)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-4 border-t-2 border-dashed border-[#10B981]" />
+          <span className="text-[10px] font-medium text-amortix-slate">Projected Health Score</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+          <span className="text-[10px] font-medium text-amortix-slate">Debt-to-Income (DTI) Ratio</span>
+        </div>
+      </div>
+
       <ChartContainer height={288}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
 

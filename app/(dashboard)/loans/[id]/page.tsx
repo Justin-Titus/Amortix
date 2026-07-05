@@ -213,16 +213,18 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
         <div className="space-y-8">
           {riskInput ? <DefaultRiskCard riskInput={riskInput} currencyCode={currencyCode} /> : null}
 
-          <div className="space-y-3">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-amortix-slate">Prepayment Impact Simulator</h2>
-            <PrepaymentSimulator
-              outstandingBalance={loan.outstandingBalance}
-              interestRate={loan.interestRate}
-              tenureMonths={loan.tenureMonths}
-              emiAmount={loan.emiAmount}
-              currencyCode={currencyCode}
-            />
-          </div>
+          {loan.outstandingBalance > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-sm font-medium uppercase tracking-wider text-amortix-slate">Prepayment Impact Simulator</h2>
+              <PrepaymentSimulator
+                outstandingBalance={loan.outstandingBalance}
+                interestRate={loan.interestRate}
+                tenureMonths={loan.tenureMonths}
+                emiAmount={loan.emiAmount}
+                currencyCode={currencyCode}
+              />
+            </div>
+          )}
 
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -272,15 +274,40 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         <div className="space-y-5">
-          <LogPaymentForm loanId={loan.id} defaultAmount={loan.emiAmount} loanName={loan.name} currencyCode={currencyCode} />
-          
-          <div className="glass-panel p-5 bg-amortix-frost">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-amortix-navy mb-3">Balance Management</h3>
-            <p className="text-xs text-amortix-slate leading-relaxed">
-              Recording a payment automatically updates your outstanding balance. 
-              Regular EMI logs also advance your next scheduled due date.
-            </p>
-          </div>
+          {loan.outstandingBalance > 0 ? (
+            <>
+              <LogPaymentForm
+                loanId={loan.id}
+                defaultAmount={loan.emiAmount}
+                loanName={loan.name}
+                currencyCode={currencyCode}
+                outstandingBalance={loan.outstandingBalance}
+                principal={loan.principal}
+              />
+              
+              <div className="glass-panel p-5 bg-amortix-frost">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-amortix-navy mb-3">Balance Management</h3>
+                <p className="text-xs text-amortix-slate leading-relaxed">
+                  Recording a payment automatically updates your outstanding balance. 
+                  Regular EMI logs also advance your next scheduled due date.
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="glass-panel p-6 text-center space-y-4 border border-emerald-200 bg-emerald-50/50">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-6 w-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-emerald-900">Loan Fully Settled</h3>
+                <p className="mt-1 text-xs text-emerald-700 leading-relaxed">
+                  Congratulations! This loan has been completely paid off. No further action is required.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

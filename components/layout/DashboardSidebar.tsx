@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { Download, Smartphone } from "lucide-react";
 import { mainNavItems, toolsNavItems, type NavItem } from "@/components/layout/navigation";
 
+import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
+
 type DashboardSidebarProps = {
   mobile?: boolean;
   onNavigate?: () => void;
@@ -78,6 +80,8 @@ export default function DashboardSidebar({ mobile = false, onNavigate }: Dashboa
             </div>
           </Link>
         </div>
+
+        <WorkspaceSwitcher />
 
         <div className="flex-1 overflow-y-auto py-5">
           <p className="mb-2 px-3 text-[11px] tracking-[0.04em] text-slate-500">Main</p>

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef, type ReactNode } from "react";
+import * as React from "react";
+import { motion, useInView } from "framer-motion";
+import { chartReveal } from "@/lib/animations-extended";
 import { SkeletonBlock } from "./Skeletons";
-import { useInView } from "framer-motion";
 
 interface ChartContainerProps {
   /** Chart content to render */
-  children: ReactNode;
+  children: React.ReactNode;
   /** Fixed height in pixels (default: 300) */
   height?: number;
   /** Minimum height fallback in pixels (default: 250) */
@@ -18,22 +19,10 @@ interface ChartContainerProps {
 }
 
 /**
- * Production-safe chart container for Recharts.
+ * Production-safe chart container for Recharts with entrance animation.
  *
  * Fixes the common "width(-1) and height(-1) of chart should be greater than 0"
  * error that occurs in Next.js production builds.
- *
- * Root causes addressed:
- * 1. SSR/hydration: Recharts measures container before CSS layout is ready
- * 2. height: 100%: Fails when parent hasn't computed dimensions yet
- * 3. Flex/grid: Containers can collapse to 0px during initial render
- *
- * @example
- * <ChartContainer height={288}>
- *   <ResponsiveContainer width="100%" height="100%">
- *     <BarChart data={data}>...</BarChart>
- *   </ResponsiveContainer>
- * </ChartContainer>
  */
 export function ChartContainer({
   children,
@@ -42,17 +31,15 @@ export function ChartContainer({
   className = "",
   showSkeleton = true,
 }: ChartContainerProps) {
-  const [isMounted, setIsMounted] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
-  useEffect(() => {
-    // Defer chart render to next tick to ensure layout is ready
+  React.useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
-  // Compute style with explicit pixel height (never rely on %)
   const containerStyle: React.CSSProperties = {
     height: `${height}px`,
     minHeight: `${minHeight}px`,
@@ -77,12 +64,15 @@ export function ChartContainer({
   }
 
   return (
-    <div
+    <motion.div
       ref={ref}
       className={`w-full min-w-0 ${className}`}
       style={containerStyle}
+      variants={chartReveal}
+      initial="hidden"
+      animate="visible"
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

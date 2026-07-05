@@ -3,6 +3,8 @@ import { env } from "@/lib/env";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "sonner";
+import { Suspense } from "react";
+import { PostHogPageView } from "@/components/analytics/PostHogPageView";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -63,9 +65,15 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col antialiased">
         {children}
         <Toaster richColors position="top-right" />
+        {/* PostHog page tracking — wrapped in Suspense (required by useSearchParams) */}
+        <Suspense fallback={null}>
+          <PostHogPageView />
+        </Suspense>
+        {/* Vercel Analytics for Web Vitals + traffic */}
         <Analytics />
         <SpeedInsights />
       </body>
     </html>
   );
 }
+

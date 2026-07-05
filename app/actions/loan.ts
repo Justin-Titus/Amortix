@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { withServerAction } from "@/lib/server-action-wrapper";
 import { loanSchema, type LoanInput } from "@/lib/validations/loan.schema";
+import { paymentSchema } from "@/lib/validations/payment.schema";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { buildLoanPath } from "@/lib/loans/url";
@@ -24,16 +25,10 @@ export type LoanRecord = {
   lender: string | null;
   notes: string | null;
   currency: string;
+  workspaceId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
-
-const paymentSchema = z.object({
-  amount: z.number().positive(),
-  paymentDate: z.coerce.date(),
-  type: z.enum(["EMI", "PREPAYMENT"]),
-  notes: z.string().trim().optional(),
-});
 
 function addOneMonth(date: Date) {
   const year = date.getFullYear();
@@ -76,6 +71,7 @@ export async function createLoan(data: LoanInput) {
       lender,
       notes,
       currency,
+      workspaceId,
     } = validated.data;
 
     await prisma.loan.create({
@@ -93,12 +89,21 @@ export async function createLoan(data: LoanInput) {
         lender,
         notes,
         currency,
+        workspaceId: workspaceId || null,
       },
     });
 
 
     revalidatePath("/dashboard");
     revalidatePath("/loans");
+
+    // Fire-and-forget analytics — never blocks the user
+    import("@/lib/analytics").then(({ analytics }) => {
+      analytics.track("loan_created", {
+        loanType: validated.data.loanType,
+        currency: validated.data.currency ?? "INR",
+      });
+    }).catch(() => {});
 
     return { success: true };
   });
@@ -114,8 +119,19 @@ export async function getLoans(): Promise<LoanRecord[]> {
   }
 
   try {
-    const loans = await prisma.loan.findMany({
+    const memberships = await prisma.workspaceMember.findMany({
       where: { userId },
+      select: { workspaceId: true },
+    });
+    const workspaceIds = memberships.map((m) => m.workspaceId);
+
+    const loans = await prisma.loan.findMany({
+      where: {
+        OR: [
+          { userId },
+          { workspaceId: { in: workspaceIds } },
+        ],
+      },
       orderBy: { createdAt: "desc" },
     });
     return loans as LoanRecord[];
@@ -135,8 +151,20 @@ export async function getLoan(id: string): Promise<LoanRecord | null> {
   }
 
   try {
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId },
+      select: { workspaceId: true },
+    });
+    const workspaceIds = memberships.map((m) => m.workspaceId);
+
     const loan = await prisma.loan.findFirst({
-      where: { id, userId },
+      where: {
+        id,
+        OR: [
+          { userId },
+          { workspaceId: { in: workspaceIds } },
+        ],
+      },
     });
     return loan as LoanRecord | null;
   } catch (error) {
@@ -160,12 +188,30 @@ export async function updateLoan(id: string, data: LoanInput) {
   }
 
   try {
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId },
+    });
+    const workspaceRoles = new Map(memberships.map((m) => [m.workspaceId, m.role]));
+
     const existingLoan = await prisma.loan.findFirst({
-      where: { id, userId },
+      where: {
+        id,
+        OR: [
+          { userId },
+          { workspaceId: { in: Array.from(workspaceRoles.keys()) } },
+        ],
+      },
     });
 
     if (!existingLoan) {
       return { error: "Loan not found" };
+    }
+
+    if (existingLoan.userId !== userId && existingLoan.workspaceId) {
+      const role = workspaceRoles.get(existingLoan.workspaceId);
+      if (!role || role === "VIEWER") {
+        return { error: "You don't have write access to this workspace." };
+      }
     }
 
     const updateData = {
@@ -199,13 +245,34 @@ export async function deleteLoan(id: string) {
     return { error: "You must be logged in to delete a loan." };
   }
 
+  const rl = await import("@/lib/with-rate-limit").then((m) => m.enforceRateLimit(userId, "delete-loan"));
+  if (!rl.allowed) return { error: "Too many requests. Please try again later." };
+
   try {
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId },
+    });
+    const workspaceRoles = new Map(memberships.map((m) => [m.workspaceId, m.role]));
+
     const existingLoan = await prisma.loan.findFirst({
-      where: { id, userId },
+      where: {
+        id,
+        OR: [
+          { userId },
+          { workspaceId: { in: Array.from(workspaceRoles.keys()) } },
+        ],
+      },
     });
 
     if (!existingLoan) {
       return { error: "Loan not found" };
+    }
+
+    if (existingLoan.userId !== userId && existingLoan.workspaceId) {
+      const role = workspaceRoles.get(existingLoan.workspaceId);
+      if (role !== "OWNER" && role !== "ADMIN") {
+        return { error: "Only workspace owners and admins can delete shared loans." };
+      }
     }
 
     await prisma.loan.delete({
@@ -231,6 +298,9 @@ export async function recordPayment(loanId: string, data: z.input<typeof payment
     return { error: "You must be logged in to record a payment." };
   }
 
+  const rl = await import("@/lib/with-rate-limit").then((m) => m.enforceRateLimit(userId, "record-payment"));
+  if (!rl.allowed) return { error: "Too many requests. Please try again later." };
+
   const validatedPayment = paymentSchema.safeParse(data);
   if (!validatedPayment.success) {
     return { error: validatedPayment.error.issues[0]?.message ?? "Invalid payment details." };
@@ -239,12 +309,30 @@ export async function recordPayment(loanId: string, data: z.input<typeof payment
   const parsedPayment = validatedPayment.data;
 
   try {
-    const loan = await prisma.loan.findUnique({
-      where: { id: loanId, userId },
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId },
+    });
+    const workspaceRoles = new Map(memberships.map((m) => [m.workspaceId, m.role]));
+
+    const loan = await prisma.loan.findFirst({
+      where: {
+        id: loanId,
+        OR: [
+          { userId },
+          { workspaceId: { in: Array.from(workspaceRoles.keys()) } },
+        ],
+      },
     });
 
     if (!loan) {
       return { error: "Loan not found." };
+    }
+
+    if (loan.userId !== userId && loan.workspaceId) {
+      const role = workspaceRoles.get(loan.workspaceId);
+      if (!role || role === "VIEWER") {
+        return { error: "You don't have write access to this workspace." };
+      }
     }
 
     const newBalance = Math.max(0, loan.outstandingBalance - parsedPayment.amount);

@@ -138,3 +138,27 @@ export function buildCalendarData(loans: RawLoan[], currentMonth: Date, today: D
 
   return { days, dueIn30, totalDueIn30 } as const;
 }
+
+export function generateMonthlyRanges(startDate: Date, endDate: Date): { start: Date; end: Date }[] {
+  const ranges: { start: Date; end: Date }[] = [];
+  const startYear = startDate.getFullYear();
+  const startMonth = startDate.getMonth();
+  const currentYear = endDate.getFullYear();
+  const currentMonth = endDate.getMonth();
+
+  let tempYear = startYear;
+  let tempMonth = startMonth;
+
+  while (tempYear < currentYear || (tempYear === currentYear && tempMonth <= currentMonth)) {
+    const start = new Date(tempYear, tempMonth, 1);
+    const end = new Date(tempYear, tempMonth + 1, 0, 23, 59, 59, 999);
+    ranges.push({ start, end });
+
+    tempMonth++;
+    if (tempMonth > 11) {
+      tempMonth = 0;
+      tempYear++;
+    }
+  }
+  return ranges;
+}
