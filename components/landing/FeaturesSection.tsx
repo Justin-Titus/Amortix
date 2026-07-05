@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Bot, FileDown, ShieldCheck } from "lucide-react";
+import { BarChart3, Bot, ShieldCheck, Users } from "lucide-react";
 import FeatureCard from "@/components/ui/FeatureCard";
 import { motion } from "framer-motion";
 
@@ -20,11 +20,11 @@ const features = [
     iconColor: "text-purple-600",
   },
   {
-    icon: FileDown,
-    title: "Export-ready reports",
-    description: "Turn amortization schedules into CSV or PDF summaries without reformatting the data.",
-    iconBg: "bg-slate-100",
-    iconColor: "text-slate-600",
+    icon: Users,
+    title: "Household workspaces",
+    description: "Invite family members to collaborate on shared loans with granular member control.",
+    iconBg: "bg-emerald-50",
+    iconColor: "text-[#118c76]",
   },
   {
     icon: ShieldCheck,
