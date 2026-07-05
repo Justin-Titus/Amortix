@@ -60,8 +60,8 @@ export function calculateMinimumPaymentBaseline(
       const interest = loan.outstanding * r;
       totalInterest += interest;
 
-      let payment = Math.min(loan.emi, loan.outstanding + interest);
-      let principal = payment - interest;
+      const payment = Math.min(loan.emi, loan.outstanding + interest);
+      const principal = payment - interest;
 
       loan.outstanding = Math.max(0, loan.outstanding - principal);
     }

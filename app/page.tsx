@@ -20,13 +20,17 @@ export default async function LandingPage() {
     redirect("/dashboard");
   }
 
-  const result = await prisma.loan.aggregate({
-    _sum: {
-      outstandingBalance: true,
-    },
-  });
-  
-  const totalActiveLoans = result._sum.outstandingBalance || 24000000; // Fallback to 2.4Cr if 0
+  let totalActiveLoans = 24000000; // Fallback to 2.4Cr if database is offline or query fails
+  try {
+    const result = await prisma.loan.aggregate({
+      _sum: {
+        outstandingBalance: true,
+      },
+    });
+    totalActiveLoans = result._sum.outstandingBalance || 24000000;
+  } catch (error) {
+    console.warn("Failed to fetch aggregate active loans, using fallback:", error);
+  }
 
   return (
     <div className="min-h-screen bg-amortix-frost text-amortix-text-primary">

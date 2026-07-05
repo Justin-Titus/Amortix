@@ -17,34 +17,27 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: AmortixWeb/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        working-directory: AmortixWeb
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        working-directory: AmortixWeb
         run: pnpm exec prisma generate
 
       - name: TypeScript type check
-        working-directory: AmortixWeb
         run: pnpm exec tsc --noEmit
 
       - name: ESLint
-        working-directory: AmortixWeb
         run: pnpm lint
 
       - name: Vitest unit tests
-        working-directory: AmortixWeb
         run: pnpm test
 
   e2e:
@@ -59,40 +52,51 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: AmortixWeb/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        working-directory: AmortixWeb
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        working-directory: AmortixWeb
         run: pnpm exec playwright install chromium --with-deps
 
       - name: Generate Prisma client
-        working-directory: AmortixWeb
         run: pnpm exec prisma generate
 
       - name: Create .env for build
-        working-directory: AmortixWeb
         run: |
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
-          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          if [ -z "$DATABASE_URL" ]; then
+            DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
+          fi
+          
+          SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+          if [ -z "$SUPABASE_URL" ]; then
+            SUPABASE_URL="https://mock.supabase.co"
+          fi
+          
+          SUPABASE_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
+          if [ -z "$SUPABASE_KEY" ]; then
+            SUPABASE_KEY="mock-anon-key"
+          fi
+
+          echo "DATABASE_URL=$DATABASE_URL" >> .env
+          echo "NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL" >> .env
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_KEY" >> .env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY || 'mock-groq-key' }}" >> .env
           echo "NEXT_PUBLIC_APP_URL=http://localhost:3000" >> .env
           echo "CRON_SECRET=ci_test_secret" >> .env
 
+      - name: Build Next.js app
+        run: pnpm build
+
       - name: Run Playwright smoke tests
-        working-directory: AmortixWeb
         run: pnpm test:e2e:ci
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
@@ -102,5 +106,5 @@ jobs:
         if: failure()
         with:
           name: playwright-report
-          path: AmortixWeb/playwright-report/
+          path: playwright-report/
           retention-days: 7
