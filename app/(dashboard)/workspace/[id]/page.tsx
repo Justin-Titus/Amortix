@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import MemberList from "@/components/workspace/MemberList";
 import InviteForm from "@/components/workspace/InviteForm";
 import LoanProgressBar from "@/components/dashboard/LoanProgressBar";
+import { slugifyWorkspaceName } from "@/lib/workspace/url";
 
 const loanColors = ["#17314f", "#118c76", "#f59f3a", "#378ADD", "#d14d5b", "#64748b"];
 
@@ -30,7 +31,7 @@ export default async function WorkspaceDashboardPage({
   }
 
   // Fetch workspace details & verify membership
-  const workspace = await prisma.workspace.findUnique({
+  let workspace = await prisma.workspace.findUnique({
     where: { id: workspaceId },
     include: {
       members: {
@@ -39,6 +40,29 @@ export default async function WorkspaceDashboardPage({
     },
   });
 
+  if (workspace && workspace.members.length > 0) {
+    const slug = slugifyWorkspaceName(workspace.name);
+    redirect(`/workspace/${slug}`);
+  }
+
+  if (!workspace) {
+    const userWorkspaceMembers = await prisma.workspaceMember.findMany({
+      where: { userId: user.id },
+      include: {
+        workspace: {
+          include: {
+            members: {
+              where: { userId: user.id },
+            },
+          },
+        },
+      },
+    });
+    workspace = userWorkspaceMembers.find(
+      (m) => slugifyWorkspaceName(m.workspace.name) === workspaceId
+    )?.workspace ?? null;
+  }
+
   if (!workspace || workspace.members.length === 0) {
     notFound();
   }
@@ -46,8 +70,8 @@ export default async function WorkspaceDashboardPage({
   const userRole = workspace.members[0].role;
 
   // Fetch loans and members
-  const loansRes = await getWorkspaceLoans(workspaceId);
-  const membersRes = await getWorkspaceMembers(workspaceId);
+  const loansRes = await getWorkspaceLoans(workspace.id);
+  const membersRes = await getWorkspaceMembers(workspace.id);
 
   const loans = loansRes.loans || [];
   const members = membersRes.members || [];
@@ -78,7 +102,7 @@ export default async function WorkspaceDashboardPage({
         stats={heroStats}
         actions={
           <>
-            <Link href={`/workspace/${workspaceId}/settings`} className="btn-secondary flex items-center gap-2">
+            <Link href={`/workspace/${slugifyWorkspaceName(workspace.name)}/settings`} className="btn-secondary flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Manage Workspace
             </Link>
@@ -128,7 +152,7 @@ export default async function WorkspaceDashboardPage({
                 </CardDescription>
               </div>
               {(userRole === "OWNER" || userRole === "ADMIN" || userRole === "MEMBER") && (
-                <Link href={`/loans/add?workspaceId=${workspaceId}`} className="text-xs font-semibold text-amortix-emerald hover:underline">
+                <Link href={`/loans/add?workspaceId=${workspace.id}`} className="text-xs font-semibold text-amortix-emerald hover:underline">
                   + Add Workspace Loan
                 </Link>
               )}
@@ -217,7 +241,7 @@ export default async function WorkspaceDashboardPage({
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <InviteForm workspaceId={workspaceId} />
+                <InviteForm workspaceId={workspace.id} />
               </CardContent>
             </Card>
           )}

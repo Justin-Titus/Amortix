@@ -12,10 +12,13 @@ import { forgotPassword } from "@/app/actions/auth";
 import Link from "next/link";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 
+import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
+
 export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const {
     register,
@@ -30,7 +33,10 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     try {
-      const result = await forgotPassword(data);
+      const result = await forgotPassword({
+        email: data.email,
+        captchaToken: captchaToken || undefined,
+      });
       if (result?.error) {
         setError(result.error);
       } else {
@@ -101,6 +107,7 @@ export default function ForgotPasswordPage() {
                       <p className="mt-1 text-xs text-amortix-red">{errors.email.message}</p>
                     )}
                   </div>
+                  <TurnstileWidget onVerify={(token) => setCaptchaToken(token)} />
                   <button
                     type="submit"
                     disabled={isSubmitting}

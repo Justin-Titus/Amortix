@@ -4,6 +4,16 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+let lastLocalUpdateTimestamp = 0;
+
+/**
+ * Call this function whenever a user performs a local action (e.g. updating settings,
+ * logging a payment) to prevent duplicate auto-sync notifications on the current tab.
+ */
+export function recordLocalUpdate() {
+  lastLocalUpdateTimestamp = Date.now();
+}
+
 export function useAutoSync(intervalMs = 5000) {
   const router = useRouter();
   const [lastSync, setLastSync] = useState<number | null>(null);
@@ -38,21 +48,26 @@ export function useAutoSync(intervalMs = 5000) {
           } else if (serverTime > lastSync) {
             setLastSync(serverTime);
             
-            let message = "Data synced automatically";
-            let description = "The dashboard has been updated with the latest changes.";
+            // Check if a local action occurred recently on this tab
+            const isRecentLocalUpdate = (Date.now() - lastLocalUpdateTimestamp) < 10000;
             
-            if (updateType === 'payment') {
-              message = "Payment recorded";
-              description = "A new payment has been synced to your dashboard.";
-            } else if (updateType === 'loan') {
-              message = "Loan details updated";
-              description = "Your loan information has been updated.";
-            } else if (updateType === 'profile') {
-              message = "Profile updated";
-              description = "Your profile settings have been synced.";
+            if (!isRecentLocalUpdate) {
+              let message = "Data synced automatically";
+              let description = "The dashboard has been updated with the latest changes.";
+              
+              if (updateType === 'payment') {
+                message = "Payment recorded";
+                description = "A new payment has been synced to your dashboard.";
+              } else if (updateType === 'loan') {
+                message = "Loan details updated";
+                description = "Your loan information has been updated.";
+              } else if (updateType === 'profile') {
+                message = "Profile updated";
+                description = "Your profile settings have been synced.";
+              }
+              
+              setPendingToast({ message, description });
             }
-            
-            setPendingToast({ message, description });
             
             startTransition(() => {
               router.refresh();
@@ -67,3 +82,4 @@ export function useAutoSync(intervalMs = 5000) {
     return () => clearInterval(interval);
   }, [lastSync, router, intervalMs]);
 }
+

@@ -34,7 +34,7 @@ export default function AuthSplitLayout({ children }: AuthSplitLayoutProps) {
                 />
               </div>
               <div>
-                <span className="block font-heading text-2xl font-medium">Amortix</span>
+                <span className="block font-heading text-2xl font-medium">Amortix<span className="text-amortix-emerald-light">.</span></span>
                 <span className="block text-xs uppercase tracking-[0.24em] text-slate-200">Financial operating system</span>
               </div>
             </Link>
@@ -69,7 +69,7 @@ export default function AuthSplitLayout({ children }: AuthSplitLayoutProps) {
           </div>
 
           <div className="relative z-10 flex items-end justify-between">
-            <p className="font-heading text-7xl leading-none text-white/8">Amortix</p>
+            <p className="font-heading text-7xl leading-none text-white/8">Amortix<span className="text-amortix-emerald-light/20">.</span></p>
             <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3 text-right text-xs text-slate-200">
               <p className="uppercase tracking-[0.2em]">Promise</p>
               <p className="mt-1 text-sm text-white">Less noise. Better decisions.</p>

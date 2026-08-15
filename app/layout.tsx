@@ -1,11 +1,36 @@
 import type { Metadata, Viewport } from "next";
+import { Space_Grotesk, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { env } from "@/lib/env";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "sonner";
 import { Suspense } from "react";
 import { PostHogPageView } from "@/components/analytics/PostHogPageView";
+import { ConsentBanner } from "@/components/ui/ConsentBanner";
+import { ConsentWrapper } from "@/components/ui/ConsentWrapper";
 import "./globals.css";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-heading-font",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body-font",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono-font",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
 
 export const viewport: Viewport = {
   themeColor: "#000000",
@@ -61,17 +86,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full" data-scroll-behavior="smooth">
+    <html
+      lang="en"
+      className={`h-full ${spaceGrotesk.variable} ${manrope.variable} ${ibmPlexMono.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <body className="min-h-full flex flex-col antialiased">
         {children}
         <Toaster richColors position="top-right" />
-        {/* PostHog page tracking — wrapped in Suspense (required by useSearchParams) */}
-        <Suspense fallback={null}>
-          <PostHogPageView />
-        </Suspense>
-        {/* Vercel Analytics for Web Vitals + traffic */}
-        <Analytics />
-        <SpeedInsights />
+        {/* DPDP-compliant consent banner — shown on first visit */}
+        <ConsentBanner />
+        {/* Non-essential trackers — gated behind analytics consent */}
+        <ConsentWrapper>
+          <Suspense fallback={null}>
+            <PostHogPageView />
+          </Suspense>
+          <Analytics />
+          <SpeedInsights />
+        </ConsentWrapper>
       </body>
     </html>
   );

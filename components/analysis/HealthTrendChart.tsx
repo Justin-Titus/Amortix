@@ -86,50 +86,71 @@ export function getTrendInsight(snapshots: HealthSnapshotPoint[]): string {
   return "Your financial health has stayed stable. A consistent trend is a good sign for lenders.";
 }
 
+function processSnapshotsForRange(snapshots: HealthSnapshotPoint[], range: RangeKey): HealthSnapshotPoint[] {
+  if (!snapshots || snapshots.length === 0) {
+    return [];
+  }
+
+  const sorted = [...snapshots].sort(
+    (a, b) => new Date(a.capturedAt).getTime() - new Date(b.capturedAt).getTime()
+  );
+
+  const monthlyData: Record<string, HealthSnapshotPoint> = {};
+  sorted.forEach((s) => {
+    const key = new Date(s.capturedAt).toLocaleDateString("en-US", { month: "2-digit", year: "numeric" });
+    monthlyData[key] = s;
+  });
+
+  const months = Object.values(monthlyData);
+  const maxCount = monthsForRange(range);
+
+  return months.slice(-maxCount);
+}
+
 export default function HealthTrendChart({ snapshots }: { snapshots: HealthSnapshotPoint[] }) {
-  const [range, setRange] = useState<RangeKey>("6M");
+  const [range, setRange] = useState<RangeKey>("3M");
+
+  const availableRanges = useMemo(() => {
+    if (!snapshots || snapshots.length === 0) return ["3M" as RangeKey];
+    
+    const uniqueMonths = new Set(
+      snapshots.map((s) => new Date(s.capturedAt).toLocaleDateString("en-US", { month: "2-digit", year: "numeric" }))
+    );
+    const count = uniqueMonths.size;
+
+    const ranges: RangeKey[] = ["3M"];
+    if (count >= 4) ranges.push("6M");
+    if (count >= 7) ranges.push("1Y");
+    return ranges;
+  }, [snapshots]);
+
+  const activeRange = availableRanges.includes(range) ? range : availableRanges[availableRanges.length - 1];
 
   const processedSnapshots = useMemo(() => {
-    // 1. Sort by date
-    const sorted = [...snapshots].sort(
-      (a, b) => new Date(a.capturedAt).getTime() - new Date(b.capturedAt).getTime()
-    );
-
-    // 2. Group by month-year to ensure one point per month
-    const monthlyData: Record<string, HealthSnapshotPoint> = {};
-    sorted.forEach((s) => {
-      const key = new Date(s.capturedAt).toLocaleDateString("en-US", { month: "2-digit", year: "numeric" });
-      monthlyData[key] = s; // Keep the latest for that month
-    });
-
-    const months = Object.values(monthlyData);
-    const count = monthsForRange(range);
-    
-    return months.slice(-count);
-  }, [range, snapshots]);
+    return processSnapshotsForRange(snapshots, activeRange);
+  }, [activeRange, snapshots]);
 
   const projected = useMemo(() => projectPoints(processedSnapshots), [processedSnapshots]);
 
   const chartData = useMemo(() => {
     const hasProjection = projected.length > 0;
+    const lastActualIndex = processedSnapshots.length - 1;
+
     const data = processedSnapshots.map((snapshot, index) => ({
       month: formatMonthLabel(snapshot.capturedAt),
       affordabilityScore: snapshot.affordabilityScore,
-      projectedScore: hasProjection && index === processedSnapshots.length - 1 ? snapshot.affordabilityScore : null,
+      projectedScore: hasProjection && index === lastActualIndex ? snapshot.affordabilityScore : null,
       dtiRatioPercent: Math.round(snapshot.dtiRatio * 100),
       totalOutstanding: snapshot.totalOutstanding,
     }));
 
-    if (data.length > 0 && projected.length > 0) {
-      const lastPoint = data[data.length - 1];
+    if (hasProjection) {
       const projectionRows = projected.map((snapshot) => ({
         month: formatMonthLabel(snapshot.capturedAt),
         affordabilityScore: null,
         projectedScore: snapshot.affordabilityScore,
         dtiRatioPercent: Math.round(snapshot.dtiRatio * 100),
         totalOutstanding: snapshot.totalOutstanding,
-        // Helper for dot connection
-        lastActualScore: lastPoint.affordabilityScore,
       }));
       return [...data, ...projectionRows];
     }
@@ -139,6 +160,8 @@ export default function HealthTrendChart({ snapshots }: { snapshots: HealthSnaps
 
   const trendInsight = useMemo(() => getTrendInsight(processedSnapshots), [processedSnapshots]);
 
+  const showAlternateTicks = chartData.length >= 8;
+
   const commonXAxis = (
     <XAxis 
       dataKey="month" 
@@ -146,27 +169,10 @@ export default function HealthTrendChart({ snapshots }: { snapshots: HealthSnaps
       axisLine={false} 
       tick={{ fontSize: 10, fill: "#64748B" }} 
       dy={10}
+      interval={showAlternateTicks ? 1 : 0}
+      minTickGap={showAlternateTicks ? 14 : 0}
     />
   );
-
-  if (processedSnapshots.length < 2) {
-    return (
-      <div className="card transition-all duration-300">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-sm font-medium text-amortix-navy">Financial health over time</h2>
-            <p className="text-[11px] text-amortix-slate">History builds as you use Amortix</p>
-          </div>
-          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-amortix-frost">
-            <div className="h-full w-1/3 animate-pulse rounded-full bg-amortix-emerald" />
-          </div>
-        </div>
-        <div className="flex h-[288px] items-center justify-center rounded-2xl border border-dashed border-amortix-border-light bg-amortix-frost/30">
-          <p className="text-xs text-amortix-slate">Need at least 2 monthly snapshots to show trend</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="card transition-all duration-300">
@@ -176,22 +182,24 @@ export default function HealthTrendChart({ snapshots }: { snapshots: HealthSnaps
           <p className="text-[11px] text-amortix-slate">Affordability score and DTI trend</p>
         </div>
 
-        <div className="inline-flex items-center rounded-xl bg-amortix-frost p-1">
-          {(["3M", "6M", "1Y"] as RangeKey[]).map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setRange(option)}
-              className={`rounded-lg px-4 py-1.5 text-[10px] font-semibold transition-all ${
-                range === option 
-                  ? "bg-white text-amortix-navy shadow-sm" 
-                  : "text-amortix-slate hover:text-amortix-navy"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
+        {availableRanges.length > 1 ? (
+          <div className="inline-flex items-center rounded-xl bg-amortix-frost p-1">
+            {availableRanges.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setRange(option)}
+                className={`rounded-lg px-4 py-1.5 text-[10px] font-semibold transition-all ${
+                  activeRange === option 
+                    ? "bg-white text-amortix-navy shadow-sm" 
+                    : "text-amortix-slate hover:text-amortix-navy"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {/* Legend */}
@@ -299,6 +307,7 @@ export default function HealthTrendChart({ snapshots }: { snapshots: HealthSnaps
               dot={{ r: 3, fill: "#F59E0B", strokeWidth: 1, stroke: "#fff" }}
               strokeWidth={2} 
               name="dtiRatioPercent"
+              connectNulls
             />
 
             <defs>

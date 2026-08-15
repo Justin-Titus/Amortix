@@ -10,7 +10,7 @@ export default function LandingFooter() {
             <Image src="/Amortix.png" alt="Amortix logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
           <div>
-            <p className="font-semibold text-amortix-navy">Amortix</p>
+            <p className="font-semibold text-amortix-navy">Amortix<span className="text-amortix-emerald">.</span></p>
             <p className="text-xs text-amortix-slate">Debt management with cleaner structure.</p>
           </div>
         </div>
@@ -22,9 +22,15 @@ export default function LandingFooter() {
           <Link href="/terms" className="hover:text-amortix-navy">
             Terms of service
           </Link>
+          <Link href="/data-rights" className="hover:text-amortix-navy">
+            Data rights
+          </Link>
         </nav>
 
-        <p className="text-xs text-amortix-text-muted">© {new Date().getFullYear()} Amortix. All rights reserved.</p>
+        <div className="flex flex-col items-start lg:items-end gap-1">
+          <p className="text-xs text-amortix-text-muted">© {new Date().getFullYear()} Amortix<span className="text-amortix-emerald">.</span> All rights reserved.</p>
+          <p className="text-[11px] text-slate-400">Grievance Officer: <a href="mailto:amortix.admin@gmail.com" className="hover:underline text-amortix-slate">amortix.admin@gmail.com</a></p>
+        </div>
       </div>
     </footer>
   );

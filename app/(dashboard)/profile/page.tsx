@@ -6,6 +6,7 @@ import { PageHero } from "@/components/layout/PageHero";
 import { FinancialProfileForm } from "@/components/dashboard/FinancialProfileForm";
 
 import { NotificationPreferencesForm } from "@/components/dashboard/NotificationPreferencesForm";
+import { DataRightsSection } from "@/components/dashboard/DataRightsSection";
 
 const UNAUTHORIZED_TEXT = "Unauthorized";
 const DB_UNAVAILABLE_TEXT = "DatabaseUnavailable";
@@ -136,6 +137,10 @@ export default async function ProfilePage() {
             emailNotifications={user.emailNotifications ?? true} 
             pushNotifications={user.pushNotifications ?? true} 
           />
+        </ProfileSection>
+
+        <ProfileSection title="Data privacy & rights (DPDP Act, 2023)" description="Export your data or request account erasure">
+          <DataRightsSection />
         </ProfileSection>
 
         <ProfileSection title="Account actions" description="Irreversible operations">

@@ -4,7 +4,20 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
+
 export default function CtaBanner() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
+
   return (
     <section className="bg-slate-50 py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -26,13 +39,22 @@ export default function CtaBanner() {
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/register" className="btn-primary">
-                Create your account
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-              <Link href="/login" className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15">
-                Sign in
-              </Link>
+              {user ? (
+                <Link href="/dashboard" className="btn-primary">
+                  Go to Dashboard
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              ) : (
+                <>
+                  <Link href="/register" className="btn-primary">
+                    Create your account
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                  <Link href="/login" className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15">
+                    Sign in
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </motion.div>

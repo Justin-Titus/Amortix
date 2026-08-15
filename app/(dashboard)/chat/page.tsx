@@ -32,35 +32,35 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
         <div className="glass-panel space-y-4 p-5">
           <PageBadge icon={Sparkles} label="AI advisor" />
           <div>
-            <h1 className="text-[24px] font-heading font-medium text-(--color-navy) leading-tight">
+            <h1 className="text-[24px] font-heading font-medium text-amortix-navy leading-tight">
               AI Financial Advisor
             </h1>
-            <p className="mt-2 text-sm leading-7 text-(--color-slate)">
+            <p className="mt-2 text-sm leading-7 text-amortix-slate">
               Ask questions about debt, strategy, extra payments, or payoff timing. The advisor reads your current loan profile first.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="flex h-full flex-col gap-2 rounded-card border border-(--color-border) bg-(--color-frost) p-3">
-              <div className="flex items-center gap-2 text-(--color-navy)">
-                <BrainCircuit className="h-4 w-4 text-(--color-emerald)" />
+            <div className="flex h-full flex-col gap-2 rounded-card border border-amortix-border-light bg-amortix-frost p-3">
+              <div className="flex items-center gap-2 text-amortix-navy">
+                <BrainCircuit className="h-4 w-4 text-amortix-emerald" />
                 Context aware
               </div>
-              <p className="text-xs text-(--color-slate)">Uses your live loans and balances.</p>
+              <p className="text-xs text-amortix-slate">Uses your live loans and balances.</p>
             </div>
-            <div className="flex h-full flex-col gap-2 rounded-card border border-(--color-border) bg-(--color-frost) p-3">
-              <div className="flex items-center gap-2 text-(--color-navy)">
-                <ShieldCheck className="h-4 w-4 text-(--color-amber)" />
+            <div className="flex h-full flex-col gap-2 rounded-card border border-amortix-border-light bg-amortix-frost p-3">
+              <div className="flex items-center gap-2 text-amortix-navy">
+                <ShieldCheck className="h-4 w-4 text-amortix-amber" />
                 Guardrails
               </div>
-              <p className="text-xs text-(--color-slate)">Advice stays focused on debt management.</p>
+              <p className="text-xs text-amortix-slate">Advice stays focused on debt management.</p>
             </div>
           </div>
         </div>
 
         <div className="card space-y-3">
-          <div className="flex items-center gap-2 text-sm font-medium text-(--color-navy)">
-            <MessageSquareText className="h-4 w-4 text-(--color-emerald)" />
+          <div className="flex items-center gap-2 text-sm font-medium text-amortix-navy">
+            <MessageSquareText className="h-4 w-4 text-amortix-emerald" />
             Quick prompts
           </div>
           <div className="space-y-2">
@@ -68,7 +68,7 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
               <Link
                 key={prompt}
                 href={`/chat?prompt=${encodeURIComponent(prompt)}`}
-                className="block rounded-card border border-(--color-border) bg-white p-3 text-xs leading-relaxed text-(--color-slate) transition-all hover:bg-slate-50 hover:border-slate-300"
+                className="block rounded-card border border-amortix-border-light bg-white p-3 text-xs leading-relaxed text-amortix-slate transition-all hover:bg-slate-50 hover:border-slate-300"
               >
                 {prompt}
               </Link>
@@ -79,7 +79,7 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
 
       <div>
         {activeLoans.length === 0 ? (
-          <div className="mb-4 rounded-2xl border border-[#E2E8F0] bg-white">
+          <div className="mb-4 rounded-2xl border border-amortix-border-light bg-white">
             <EmptyState
               variant="compact"
               title="Add a loan before asking strategy questions"
@@ -88,12 +88,12 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
             />
           </div>
         ) : null}
-        <div className="glass-panel mb-4 hidden items-center justify-between px-4 py-3 text-xs text-(--color-slate) lg:flex">
+        <div className="glass-panel mb-4 hidden items-center justify-between px-4 py-3 text-xs text-amortix-slate lg:flex">
           <span>Composer stays pinned below while messages scroll independently.</span>
-          <span className="flex items-center gap-2 text-(--color-emerald)">
+          <span className="flex items-center gap-2 text-amortix-emerald">
             <span className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-(--color-emerald)" aria-hidden="true" />
-              <span className="text-[11px] font-medium text-(--color-emerald)">Online</span>
+              <span className="h-2 w-2 rounded-full bg-amortix-emerald" aria-hidden="true" />
+              <span className="text-[11px] font-medium text-amortix-emerald">Online</span>
             </span>
           </span>
         </div>

@@ -10,7 +10,7 @@ export default function NotFoundPage() {
             <AlertTriangle className="h-8 w-8" />
           </div>
           <div>
-            <h1 className="text-[32px] font-heading font-semibold text-[#0D1F3C]">404 — Page not found</h1>
+            <h1 className="text-[32px] font-heading font-semibold text-amortix-navy">404 — Page not found</h1>
             <p className="mt-3 text-sm leading-6 text-slate-500">
               The page you are looking for does not exist or has been moved. Use one of the links below to continue.
             </p>

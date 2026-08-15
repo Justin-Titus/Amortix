@@ -8,35 +8,13 @@ import TrustSection from "@/components/landing/TrustSection";
 import GetTheAppBanner from "@/components/landing/GetTheAppBanner";
 import LandingFooter from "@/components/landing/LandingFooter";
 
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 
-export default async function LandingPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (user) {
-    redirect("/dashboard");
-  }
-
-  let totalActiveLoans = 24000000; // Fallback to 2.4Cr if database is offline or query fails
-  try {
-    const result = await prisma.loan.aggregate({
-      _sum: {
-        outstandingBalance: true,
-      },
-    });
-    totalActiveLoans = result._sum.outstandingBalance || 24000000;
-  } catch (error) {
-    console.warn("Failed to fetch aggregate active loans, using fallback:", error);
-  }
-
+export default function LandingPage() {
   return (
     <div className="min-h-screen bg-amortix-frost text-amortix-text-primary">
       <LandingNav />
       <main>
-        <HeroSection totalActiveLoans={totalActiveLoans} />
+        <HeroSection />
         <StatsBand />
         <DeferredCalculator />
         <FeaturesSection />

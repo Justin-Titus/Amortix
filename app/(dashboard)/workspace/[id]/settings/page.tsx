@@ -11,6 +11,7 @@ import MemberList from "@/components/workspace/MemberList";
 import WorkspaceRenameForm from "@/components/workspace/WorkspaceRenameForm";
 import LoanAssignmentList from "@/components/workspace/LoanAssignmentList";
 import DeleteWorkspaceButton from "@/components/workspace/DeleteWorkspaceButton";
+import { slugifyWorkspaceName } from "@/lib/workspace/url";
 
 export default async function WorkspaceSettingsPage({
   params,
@@ -28,7 +29,7 @@ export default async function WorkspaceSettingsPage({
   }
 
   // Fetch workspace details & verify membership
-  const workspace = await prisma.workspace.findUnique({
+  let workspace = await prisma.workspace.findUnique({
     where: { id: workspaceId },
     include: {
       members: {
@@ -36,6 +37,29 @@ export default async function WorkspaceSettingsPage({
       },
     },
   });
+
+  if (workspace && workspace.members.length > 0) {
+    const slug = slugifyWorkspaceName(workspace.name);
+    redirect(`/workspace/${slug}/settings`);
+  }
+
+  if (!workspace) {
+    const userWorkspaceMembers = await prisma.workspaceMember.findMany({
+      where: { userId: user.id },
+      include: {
+        workspace: {
+          include: {
+            members: {
+              where: { userId: user.id },
+            },
+          },
+        },
+      },
+    });
+    workspace = userWorkspaceMembers.find(
+      (m) => slugifyWorkspaceName(m.workspace.name) === workspaceId
+    )?.workspace ?? null;
+  }
 
   if (!workspace || workspace.members.length === 0) {
     notFound();
@@ -47,8 +71,8 @@ export default async function WorkspaceSettingsPage({
   const canManage = isOwner || isAdmin;
 
   // Fetch members, pending invites, and user's loans
-  const membersRes = await getWorkspaceMembers(workspaceId);
-  const invitesRes = canManage ? await getPendingInvites(workspaceId) : { invites: [] };
+  const membersRes = await getWorkspaceMembers(workspace.id);
+  const invitesRes = canManage ? await getPendingInvites(workspace.id) : { invites: [] };
   const userLoans = await getLoans();
 
   const members = membersRes.members || [];
@@ -58,7 +82,7 @@ export default async function WorkspaceSettingsPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Link
-          href={`/workspace/${workspaceId}`}
+          href={`/workspace/${slugifyWorkspaceName(workspace.name)}`}
           className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -85,7 +109,7 @@ export default async function WorkspaceSettingsPage({
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <WorkspaceRenameForm workspaceId={workspaceId} currentName={workspace.name} />
+                <WorkspaceRenameForm workspaceId={workspace.id} currentName={workspace.name} />
               </CardContent>
             </Card>
           )}
@@ -101,7 +125,7 @@ export default async function WorkspaceSettingsPage({
             <CardContent className="p-0">
               <LoanAssignmentList
                 userLoans={userLoans}
-                workspaceId={workspaceId}
+                workspaceId={workspace.id}
                 canManage={currentUserRole !== "VIEWER"}
               />
             </CardContent>
@@ -118,7 +142,7 @@ export default async function WorkspaceSettingsPage({
               </CardHeader>
               <CardContent className="p-0">
                 <DeleteWorkspaceButton
-                  workspaceId={workspaceId}
+                  workspaceId={workspace.id}
                   workspaceName={workspace.name}
                 />
               </CardContent>
@@ -141,7 +165,7 @@ export default async function WorkspaceSettingsPage({
                 members={members}
                 currentUserRole={currentUserRole}
                 currentUserId={user.id}
-                workspaceId={workspaceId}
+                workspaceId={workspace.id}
               />
             </CardContent>
           </Card>

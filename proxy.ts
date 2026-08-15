@@ -63,39 +63,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(insightsUrl);
   }
 
-  // Update session and get supabase response
-  let response = await updateSession(request);
-
-  // Check auth state for route protection
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const { data, error } = await supabase.auth.getUser();
-  const user = data?.user ?? null;
-
-  if (error) {
-    // Session is invalid or refresh token is expired.
-    // Proceed as unauthenticated.
-  }
+  // Update session and check auth user in single pass
+  const { response, user } = await updateSession(request);
 
   const isLoggedIn = !!user;
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));

@@ -177,7 +177,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
           </div>
           <p className="pb-1 text-2xl font-mono text-amortix-navy">
             {formatCurrency(loan.emiAmount, currencyCode)}
-            <span className="text-sm font-sans text-amortix-slate">/mo</span>
+            <span className="text-sm text-amortix-slate">/mo</span>
           </p>
           <p className="mt-3 border-t border-amortix-border-light pt-3 text-sm text-amortix-slate">
             Principal: {formatCurrency(loan.principal, currencyCode)}
@@ -201,7 +201,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
             <h3 className="text-sm font-medium uppercase tracking-wider">Tenure</h3>
           </div>
           <p className="pb-1 text-2xl font-mono text-amortix-navy">
-            {loan.tenureMonths} <span className="text-sm font-sans text-amortix-slate">months</span>
+            {loan.tenureMonths} <span className="text-sm text-amortix-slate">months</span>
           </p>
           <p className="mt-3 border-t border-amortix-border-light pt-3 text-sm text-amortix-slate">
             Started: {new Date(loan.startDate).toLocaleDateString(getCurrencyConfig(currencyCode).locale, { month: "short", year: "numeric" })}

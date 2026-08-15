@@ -3,6 +3,7 @@
 import { useTransition, useState, useEffect } from "react";
 import { updateUserSettings } from "@/app/actions/settings";
 import { toast } from "sonner";
+import { recordLocalUpdate } from "@/hooks/useAutoSync";
 
 export function NotificationPreferencesForm({
   emailNotifications,
@@ -20,6 +21,7 @@ export function NotificationPreferencesForm({
   useEffect(() => setLocalPush(pushNotifications), [pushNotifications]);
 
   const handleToggle = (type: "email" | "push", checked: boolean) => {
+    recordLocalUpdate();
     // Optimistic UI update
     if (type === "email") setLocalEmail(checked);
     if (type === "push") setLocalPush(checked);

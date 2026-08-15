@@ -75,7 +75,7 @@ export default function DashboardSidebar({ mobile = false, onNavigate }: Dashboa
               />
             </div>
             <div>
-              <span className="block font-heading text-lg font-medium text-slate-100">Amortix</span>
+              <span className="block font-heading text-lg font-medium text-slate-100">Amortix<span className="text-amortix-emerald-light">.</span></span>
               <span className="block text-[11px] tracking-[0.04em] text-slate-400">Debt operations</span>
             </div>
           </Link>

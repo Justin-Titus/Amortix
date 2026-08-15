@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { deleteLoanNotifications } from "@/lib/notifications";
 import { withServerAction } from "@/lib/server-action-wrapper";
 import { loanSchema, type LoanInput } from "@/lib/validations/loan.schema";
 import { paymentSchema } from "@/lib/validations/payment.schema";
@@ -278,6 +279,8 @@ export async function deleteLoan(id: string) {
     await prisma.loan.delete({
       where: { id },
     });
+
+    await deleteLoanNotifications(id);
     
     revalidatePath("/dashboard");
     revalidatePath("/loans");

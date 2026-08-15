@@ -134,9 +134,8 @@ export function CustomSelect<T extends string>({ id, value, options, onChange, p
                     handleSelect(option.value);
                   }
                 }}
-                className={`cursor-pointer px-4 py-3 text-sm text-[#0D1F3C] transition duration-150 ease-out ${
-                  isHighlighted ? "bg-slate-100" : "bg-white"
-                } ${isSelected ? "font-semibold" : "font-normal"} hover:bg-slate-100 focus-visible:outline-none focus-visible:bg-slate-100`}
+                className={`cursor-pointer px-4 py-3 text-sm text-[#0D1F3C] transition duration-150 ease-out ${isHighlighted ? "bg-slate-100" : "bg-white"
+                  } ${isSelected ? "font-semibold" : "font-normal"} hover:bg-slate-100 focus-visible:outline-none focus-visible:bg-slate-100`}
               >
                 {option.label}
               </li>

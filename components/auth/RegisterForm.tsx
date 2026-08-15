@@ -10,8 +10,10 @@ import {
 } from "@/lib/validations/auth.schema";
 import { createClient } from "@/lib/supabase/client";
 import { syncUserWithPrisma, isPasswordLeaked } from "@/app/actions/auth";
+import { recordUserConsent } from "@/app/actions/consent";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
 
 function getPasswordStrength(password: string): {
   score: number;
@@ -39,6 +41,9 @@ export default function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [consentTerms, setConsentTerms] = useState(false);
+  const [consentMarketing, setConsentMarketing] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const {
     register,
@@ -54,6 +59,11 @@ export default function RegisterForm() {
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
   const onSubmit = async (data: RegisterInput) => {
+    if (!consentTerms) {
+      setError("You must read and accept the Terms of Service and Privacy Policy to create an account.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -66,11 +76,12 @@ export default function RegisterForm() {
         return;
       }
 
-      // 1. Sign up with Supabase
+      // 1. Sign up with Supabase with CAPTCHA token support
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
+          captchaToken: captchaToken || undefined,
           data: {
             full_name: data.name,
           },
@@ -94,6 +105,10 @@ export default function RegisterForm() {
           setError("Failed to sync user data. Please try again.");
           return;
         }
+
+        // 3. Record consent decisions (DPDP compliance)
+        await recordUserConsent({ purpose: "service_terms", granted: true });
+        await recordUserConsent({ purpose: "marketing_emails", granted: consentMarketing });
 
         setSuccess(true);
       } else {
@@ -214,7 +229,7 @@ export default function RegisterForm() {
                 autoComplete="new-password"
                 {...register("password")}
                 className="input pr-12"
-                placeholder="Min. 8 chars, 1 uppercase, 1 number"
+                placeholder="Min. 8 chars, 1 uppercase, 1 number, 1 symbol"
               />
               <button
                 type="button"
@@ -287,10 +302,47 @@ export default function RegisterForm() {
             )}
           </div>
 
+          {/* Consent Checkboxes (DPDP Act India Compliance) */}
+          <div className="space-y-3 pt-2">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consentTerms}
+                onChange={(e) => setConsentTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-xs text-amortix-slate leading-5">
+                I have read and agree to the{" "}
+                <Link href="/terms" className="text-amortix-emerald hover:underline font-medium">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-amortix-emerald hover:underline font-medium">
+                  Privacy Policy
+                </Link>
+                . <span className="text-amber-600 font-medium">*</span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consentMarketing}
+                onChange={(e) => setConsentMarketing(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-xs text-amortix-slate leading-5">
+                I agree to receive product updates, tips, and promotional emails from Amortix. (Optional)
+              </span>
+            </label>
+          </div>
+
+          <TurnstileWidget onVerify={(token) => setCaptchaToken(token)} />
+
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="btn-primary w-full"
+            disabled={isSubmitting || !consentTerms}
+            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
             id="register-submit-btn"
           >
             {isSubmitting ? (

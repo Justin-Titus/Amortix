@@ -4,6 +4,7 @@ import { useState, useCallback, useTransition } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { recordPayment } from "@/app/actions/loan";
+import { recordLocalUpdate } from "@/hooks/useAutoSync";
 import { Card } from "@/components/ui/Card";
 import { ConfettiCelebration } from "@/components/ui/ConfettiCelebration";
 import { getCurrencyConfig } from "@/lib/calculations";
@@ -50,6 +51,7 @@ export default function LogPaymentForm({
       return;
     }
 
+    recordLocalUpdate();
     setIsSubmitting(true);
     setError(null);
 

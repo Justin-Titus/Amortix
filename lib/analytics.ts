@@ -9,6 +9,8 @@
  *   analytics.track("loan_created", { loanType: "HOME", currency: "INR" });
  */
 
+import { isConsentGranted } from "@/lib/consent";
+
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://app.posthog.com";
 
@@ -17,6 +19,7 @@ let posthogLib: typeof import("posthog-js").default | null = null;
 
 async function getPostHog() {
   if (!POSTHOG_KEY || process.env.NODE_ENV !== "production") return null;
+  if (!isConsentGranted("analytics")) return null;
 
   if (!posthogLib) {
     const { default: posthog } = await import("posthog-js");

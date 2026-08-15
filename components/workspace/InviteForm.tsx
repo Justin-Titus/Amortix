@@ -4,6 +4,13 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { inviteToWorkspace } from "@/app/actions/workspace";
 import { Copy, Check, Link as LinkIcon } from "lucide-react";
+import { CustomSelect } from "@/components/ui/CustomSelect";
+
+const roleOptions: { value: "ADMIN" | "MEMBER" | "VIEWER"; label: string }[] = [
+  { value: "MEMBER", label: "MEMBER (Can log payments & view)" },
+  { value: "ADMIN", label: "ADMIN (Can add/delete loans & invite)" },
+  { value: "VIEWER", label: "VIEWER (View-only workspace access)" },
+];
 
 interface InviteFormProps {
   workspaceId: string;
@@ -98,16 +105,12 @@ export default function InviteForm({ workspaceId }: InviteFormProps) {
             <label htmlFor="invite-role" className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
               Privilege Role
             </label>
-            <select
+            <CustomSelect
               id="invite-role"
               value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              className="w-full rounded-xl border border-amortix-border-light bg-slate-50 px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-amortix-emerald"
-            >
-              <option value="MEMBER">MEMBER (Can log payments & view)</option>
-              <option value="ADMIN">ADMIN (Can add/delete loans & invite)</option>
-              <option value="VIEWER">VIEWER (View-only workspace access)</option>
-            </select>
+              options={roleOptions}
+              onChange={(val) => setRole(val)}
+            />
           </div>
 
           <button

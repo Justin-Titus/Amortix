@@ -64,7 +64,7 @@ export default function DeleteWorkspaceButton({
               value={confirmName}
               onChange={(e) => setConfirmName(e.target.value)}
               placeholder="Type workspace name"
-              className="flex-1 rounded-xl border border-red-350 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="flex-1 rounded-xl border border-red-300 bg-white px-3 py-2 text-xs text-slate-800 input-danger-focus"
               disabled={isPending}
             />
             <div className="flex gap-2">

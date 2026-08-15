@@ -27,6 +27,7 @@ model User {
   pushNotifications  Boolean             @default(true)
   expoPushToken      String?
   workspaces         WorkspaceMember[]
+  consentRecords     ConsentRecord[]
 }
 
 model FinancialProfile {
@@ -239,5 +240,32 @@ enum InviteStatus {
   ACCEPTED
   DECLINED
   EXPIRED
+}
+
+model ConsentRecord {
+  id          String   @id @default(cuid())
+  userId      String
+  purpose     String   // "service_terms" | "marketing_emails" | "analytics" | "functional"
+  granted     Boolean
+  grantedAt   DateTime @default(now())
+  ipHash      String?  // Anonymized hash of IP for audit trail
+  userAgent   String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+}
+
+model DataRightsRequest {
+  id          String   @id @default(cuid())
+  userId      String?
+  name        String
+  email       String
+  requestType String   // "ACCESS" | "CORRECTION" | "ERASURE" | "WITHDRAW" | "PORTABILITY"
+  details     String?
+  status      String   @default("PENDING") // "PENDING" | "IN_PROGRESS" | "COMPLETED"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([email, status])
 }
 

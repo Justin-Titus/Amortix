@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ChevronDown, Plus, Shield, Users, Briefcase } from "lucide-react";
 import { getWorkspaces, createWorkspace } from "@/app/actions/workspace";
 import { useTransition } from "react";
+import { slugifyWorkspaceName } from "@/lib/workspace/url";
 
 export default function WorkspaceSwitcher() {
   const router = useRouter();
@@ -28,12 +29,15 @@ export default function WorkspaceSwitcher() {
     load();
   }, [activeWorkspaceId]);
 
-  const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
+  const activeWorkspace = workspaces.find(
+    (w) => w.id === activeWorkspaceId || slugifyWorkspaceName(w.name) === activeWorkspaceId
+  );
 
-  const handleSelect = (workspaceId: string | null) => {
+  const handleSelect = (workspaceId: string | null, workspaceName?: string) => {
     setIsOpen(false);
     if (workspaceId) {
-      router.push(`/workspace/${workspaceId}`);
+      const slug = workspaceName ? slugifyWorkspaceName(workspaceName) : workspaceId;
+      router.push(`/workspace/${slug}`);
     } else {
       router.push("/dashboard");
     }
@@ -56,7 +60,8 @@ export default function WorkspaceSwitcher() {
         if (listRes.success && listRes.workspaces) {
           setWorkspaces(listRes.workspaces);
         }
-        router.push(`/workspace/${res.workspace.id}`);
+        const slug = slugifyWorkspaceName(res.workspace.name);
+        router.push(`/workspace/${slug}`);
       }
     });
   };
@@ -97,9 +102,9 @@ export default function WorkspaceSwitcher() {
             {workspaces.map((w) => (
               <button
                 key={w.id}
-                onClick={() => handleSelect(w.id)}
+                onClick={() => handleSelect(w.id, w.name)}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-all ${
-                  activeWorkspaceId === w.id
+                  activeWorkspaceId === w.id || activeWorkspaceId === slugifyWorkspaceName(w.name)
                     ? "bg-emerald-500/10 text-emerald-300"
                     : "text-slate-300 hover:bg-white/5 hover:text-white"
                 }`}

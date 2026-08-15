@@ -17,10 +17,10 @@ interface MetricCardProps {
 
 const colorMap: Record<MetricCardValueColor, string> = {
   default: "text-amortix-navy",
-  emerald: "text-emerald-600",
-  amber: "text-amber-500",
-  red: "text-red-500",
-  muted: "text-slate-300",
+  emerald: "text-amortix-emerald",
+  amber: "text-amortix-amber",
+  red: "text-amortix-red",
+  muted: "text-amortix-text-muted",
 };
 
 export function MetricCard({
@@ -73,7 +73,7 @@ export function MetricCard({
       <motion.button
         type="button"
         onClick={onClick}
-        className="w-full text-left"
+        className="w-full text-left rounded-3xl"
         {...hoverLift}
         {...pressScale}
       >
@@ -83,7 +83,7 @@ export function MetricCard({
   }
 
   return (
-    <motion.div {...hoverLift}>
+    <motion.div className="rounded-3xl" {...hoverLift}>
       {cardContent}
     </motion.div>
   );

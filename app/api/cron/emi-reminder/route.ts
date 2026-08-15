@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmiReminderEmail } from "@/lib/email";
-import { sendPushNotification } from "@/lib/push";
+import { createInAppNotification } from "@/lib/notifications";
+import { sendExpoPush } from "@/lib/push";
 
 export async function GET(req: NextRequest) {
   // 1. Verify Vercel Cron Secret for security
@@ -113,15 +114,39 @@ export async function GET(req: NextRequest) {
         }).format(loan.emiAmount);
 
         const dayWord = daysLeft === 0 ? "today" : daysLeft === 1 ? "tomorrow" : `in ${daysLeft} days`;
-        
+        const reminderTitle = "EMI Reminder 🔔";
+        const reminderBody = `Your ${loan.name} EMI of ${formattedAmount} is due ${dayWord} on ${formattedDueDate}.`;
+        const reminderLink = `/loans/${loan.id}`;
+
+        // In-app + push only when pushNotifications is enabled (not email-only)
         if (loan.user.pushNotifications) {
-          await sendPushNotification(
-            loan.user.id,
-            "EMI Reminder 🔔",
-            `Your ${loan.name} EMI of ${formattedAmount} is due ${dayWord} on ${formattedDueDate}.`,
-            "emi_reminder",
-            `/loans/${loan.id}`
-          );
+          const startOfToday = new Date(today);
+          startOfToday.setHours(0, 0, 0, 0);
+          const existingReminder = await prisma.notification.findFirst({
+            where: {
+              userId: loan.user.id,
+              type: "emi_reminder",
+              link: reminderLink,
+              createdAt: { gte: startOfToday },
+            },
+          });
+
+          if (!existingReminder) {
+            await createInAppNotification(
+              loan.user.id,
+              reminderTitle,
+              reminderBody,
+              "emi_reminder",
+              reminderLink
+            );
+
+            await sendExpoPush(
+              loan.user.id,
+              reminderTitle,
+              reminderBody,
+              reminderLink
+            );
+          }
         }
 
         sentCount++;

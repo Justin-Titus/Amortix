@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
 import { updateUserSettings } from "@/app/actions/settings";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { recordLocalUpdate } from "@/hooks/useAutoSync";
 
 type EmploymentType = "SALARIED" | "SELF_EMPLOYED" | "BUSINESS_OWNER" | "STUDENT" | "OTHER";
 
@@ -42,6 +43,7 @@ export function FinancialProfileForm({ defaultValues }: { defaultValues: Financi
   const hasEmergencyFund = watch("hasEmergencyFund");
 
   const onSubmit = async (data: FinancialProfileFormValues) => {
+    recordLocalUpdate();
     setIsSaving(true);
     setErrorMsg(null);
     setIsSuccess(false);

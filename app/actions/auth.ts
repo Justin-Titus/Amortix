@@ -46,10 +46,11 @@ export async function syncUserWithPrisma(data: {
 /**
  * Sends a password reset email using Supabase.
  */
-export async function forgotPassword(data: { email: string }) {
+export async function forgotPassword(data: { email: string; captchaToken?: string }) {
   return await withServerAction("forgotPassword", async () => {
     const supabase = await createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      captchaToken: data.captchaToken || undefined,
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/auth/callback?next=/reset-password`,
     });
 
@@ -81,8 +82,15 @@ export async function resetPassword(data: { password: string }) {
 
 import crypto from "crypto";
 
+const FALLBACK_LEAKED_PASSWORDS = new Set([
+  "123456", "password", "12345678", "qwerty", "123456789", "12345", "1234567",
+  "password1", "1234567890", "welcome", "admin", "1234567890a", "p@ssword",
+  "admin123", "password123", "pass1234", "letmein", "monkey", "dragon"
+]);
+
 /**
  * Checks if a password was previously leaked using the HaveIBeenPwned API range check.
+ * Falls back to local common weak password check if HIBP is unreachable.
  */
 export async function isPasswordLeaked(password: string): Promise<boolean> {
   if (!password) return false;
@@ -92,26 +100,26 @@ export async function isPasswordLeaked(password: string): Promise<boolean> {
   const suffix = hash.slice(5);
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+      signal: controller.signal,
       next: { revalidate: 86400 } // Cache for 24 hours
     });
-    if (!response.ok) return false;
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return FALLBACK_LEAKED_PASSWORDS.has(password.toLowerCase());
+    }
 
     const data = await response.text();
     const hashes = data.split("\n");
 
     return hashes.some((h) => h.trim().split(":")[0] === suffix);
   } catch (err) {
-    console.error("Password check failed:", err);
-    return false; // Fail open to not block signups
+    console.warn("HIBP password check timed out or failed. Falling back to local dictionary check:", err);
+    return FALLBACK_LEAKED_PASSWORDS.has(password.toLowerCase());
   }
 }
 
-// Deprecated actions that were for NextAuth
-export async function registerUser() {
-  return { error: "This action is deprecated. Please use Supabase Auth on the client." };
-}
-
-export async function loginUser() {
-  return { error: "This action is deprecated. Please use Supabase Auth on the client." };
-}

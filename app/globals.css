@@ -38,9 +38,21 @@
   --color-border: #dfddd5;
   --color-input-border: #c9ced6;
 
-  --font-heading: "Space Grotesk", "Satoshi", "Avenir Next", sans-serif;
-  --font-body: "Manrope", "Nunito Sans", "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", "JetBrains Mono", "Fira Code", monospace;
+  /* Red color palette for danger states */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+
+  --font-heading: var(--font-heading-font), "Space Grotesk", "Satoshi", "Avenir Next", sans-serif;
+  --font-body: var(--font-body-font), "Manrope", "Nunito Sans", "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-font), "IBM Plex Mono", "JetBrains Mono", "Fira Code", monospace;
 
   --radius-card: 20px;
   --radius-button: 14px;
@@ -127,7 +139,8 @@ html {
   }
 
   body {
-    @apply font-body text-amortix-text-primary;
+    font-family: var(--font-body);
+    color: var(--color-amortix-text-primary);
     background: #f8fafc;
     font-size: 16px;
     line-height: 1.65;
@@ -155,7 +168,8 @@ html {
   h4,
   h5,
   h6 {
-    @apply font-heading font-medium tracking-tight;
+    font-family: var(--font-heading);
+    font-weight: 500;
     letter-spacing: -0.015em;
     line-height: 1.2;
   }
@@ -172,7 +186,7 @@ html {
 
   .num,
   .font-currency {
-    @apply font-mono;
+    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
 
@@ -209,6 +223,22 @@ html {
 *:focus-visible {
   outline: 2px solid var(--color-emerald);
   outline-offset: 2px;
+}
+
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none;
+}
+
+.input-danger-focus:focus,
+.input-danger-focus:focus-visible {
+  outline: none !important;
+  border-color: #dc2626 !important;
+  box-shadow: none !important;
 }
 
 /* ===== Selection ===== */
@@ -375,18 +405,6 @@ html {
     background: rgba(255, 255, 255, 0.92);
   }
 
-  .select-input {
-    @apply w-full min-h-11 rounded-lg border border-amortix-border-mid bg-white px-3 py-2 text-sm text-amortix-text-primary shadow-md outline-none transition-all duration-200 ease-out placeholder:text-amortix-slate focus:border-transparent focus:ring-2 focus:ring-blue-500/30 appearance-none cursor-pointer pr-11;
-    background-image: linear-gradient(45deg, transparent 50%, #64748b 50%), linear-gradient(135deg, #64748b 50%, transparent 50%), linear-gradient(to right, transparent, transparent);
-    background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px), 100% 0;
-    background-size: 6px 6px, 6px 6px, 2.5rem 100%;
-    background-repeat: no-repeat;
-  }
-
-  .select-input option {
-    background-color: white;
-    color: var(--color-amortix-text-primary);
-  }
 
   .dropdown-menu {
     @apply rounded-lg border border-slate-200 bg-white shadow-lg ring-1 ring-slate-200 backdrop-blur-sm transition-all duration-200 ease-out;

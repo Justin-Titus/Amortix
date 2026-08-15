@@ -1,6 +1,6 @@
 import LandingNav from "@/components/landing/LandingNav";
 import LandingFooter from "@/components/landing/LandingFooter";
-import { Scale, FileText, CheckCircle, AlertTriangle } from "lucide-react";
+import { Scale, FileText, CheckCircle, AlertTriangle, Shield } from "lucide-react";
 
 export const metadata = {
   title: "Terms of Service — Amortix",
@@ -100,6 +100,26 @@ export default function TermsPage() {
             <p className="body-text text-base leading-7">
               In no event shall Amortix or its developers be liable for any direct, indirect, incidental, special, or consequential damages resulting from the use or inability to use our services. We reserve the right to suspend or terminate access to our platform for any reason, including any breach of these Terms, at our sole discretion without notice.
             </p>
+          </section>
+
+          {/* Section 7: Data Protection & DPDP Compliance */}
+          {/* <!-- LEGAL REVIEW REQUIRED: Data protection clause --> */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-amortix-emerald" />
+              <h2 className="font-heading text-2xl font-medium text-amortix-navy">
+                7. Data Protection and Privacy (DPDP Act, 2023)
+              </h2>
+            </div>
+            <p className="body-text text-base leading-7">
+              Amortix complies with the Digital Personal Data Protection Act, 2023 (India). By using our services, you acknowledge that:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 body-text text-base">
+              <li>Your personal and financial data is collected and processed based on your explicit consent or performance of service contracts.</li>
+              <li>You retain statutory rights to access, correct, erase, and port your personal data, as well as the right to withdraw consent at any time.</li>
+              <li>You may file grievances directly with our designated Grievance Officer (<a href="mailto:amortix.admin@gmail.com" className="text-amortix-emerald underline">amortix.admin@gmail.com</a>), who will respond within 30 days.</li>
+              <li>For detailed information regarding processing purposes, data processors, and retention periods, please refer to our <a href="/privacy" className="text-amortix-emerald underline font-medium">Privacy Policy</a>.</li>
+            </ul>
           </section>
 
           <div className="border-t border-slate-200/80 pt-8 text-center">

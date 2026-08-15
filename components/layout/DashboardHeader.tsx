@@ -93,8 +93,8 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
   };
 
   useEffect(() => {
-    const onPointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
+    const handleOutsideClick = (event: Event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
         setNotificationOpen(false);
       }
@@ -107,13 +107,20 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
       }
     };
 
-    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("pointerdown", handleOutsideClick);
+    document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("pointerdown", handleOutsideClick);
+      document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setNotificationOpen(false);
+  }, [pathname]);
 
   const openNotifications = async () => {
     const nextState = !notificationOpen;
@@ -158,11 +165,7 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
         </button>
 
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-amortix-slate">Control room</span>
-            <span className="text-[11px] text-slate-300">/</span>
-            <h1 className="truncate font-heading text-[15px] font-medium text-amortix-navy">{pageTitle}</h1>
-          </div>
+          <h1 className="truncate font-heading text-base font-medium text-amortix-navy">{pageTitle}</h1>
           <p className="hidden text-[11px] text-amortix-slate/70 sm:block">{pageContext}</p>
         </div>
 
@@ -222,7 +225,15 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
                       </div>
                       <div className="mt-2 flex items-center justify-between">
                         {notification.link ? (
-                          <Link href={notification.link} className="dropdown-item text-xs font-medium text-amortix-emerald hover:text-emerald-700" role="menuitem">
+                          <Link 
+                            href={notification.link} 
+                            onClick={() => {
+                              setMenuOpen(false);
+                              setNotificationOpen(false);
+                            }}
+                            className="dropdown-item text-xs font-medium text-amortix-emerald hover:text-emerald-700" 
+                            role="menuitem"
+                          >
                             Open
                           </Link>
                         ) : <span />}
@@ -248,7 +259,10 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
 
           <button
             type="button"
-            onClick={() => setMenuOpen((prev) => !prev)}
+            onClick={() => {
+              setMenuOpen((prev) => !prev);
+              setNotificationOpen(false);
+            }}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-medium text-white hover:ring-2 hover:ring-emerald-500/30 transition-all"
             aria-label="Open profile menu"
           >
@@ -257,13 +271,29 @@ export default function DashboardHeader({ onMenuToggle, isMenuOpen = false }: Da
 
           {menuOpen ? (
             <div className="dropdown-menu absolute right-0 top-full z-50 mt-2 w-48" role="menu" aria-label="Profile menu">
-              <Link href="/profile" className="dropdown-item block text-sm text-slate-700" role="menuitem">
+              <Link 
+                href="/profile" 
+                onClick={() => {
+                  setMenuOpen(false);
+                  setNotificationOpen(false);
+                }}
+                className="dropdown-item block text-sm text-slate-700" 
+                role="menuitem"
+              >
                 <div className="flex items-center gap-2">
                   <UserRound className="h-4 w-4 text-slate-400" />
                   <span>Profile</span>
                 </div>
               </Link>
-              <Link href="/signout" className="dropdown-item block text-sm text-slate-700" role="menuitem">
+              <Link 
+                href="/signout" 
+                onClick={() => {
+                  setMenuOpen(false);
+                  setNotificationOpen(false);
+                }}
+                className="dropdown-item block text-sm text-slate-700" 
+                role="menuitem"
+              >
                 Sign out
               </Link>
             </div>

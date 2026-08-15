@@ -114,7 +114,7 @@ export default function GoogleCallbackPage() {
   }, [router, supabase]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white font-sans antialiased select-none">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white antialiased select-none">
       <div className="flex flex-col items-center justify-center space-y-6 max-w-md p-8 border border-white/10 rounded-3xl bg-slate-900/50 backdrop-blur-xl shadow-2xl">
         {/* Loading Spinner */}
         <div className="relative flex items-center justify-center h-16 w-16">
