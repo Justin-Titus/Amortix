@@ -31,6 +31,15 @@ interface TurnstileWidgetProps {
 export function TurnstileWidget({ onVerify, onExpire, className }: TurnstileWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+
+  const onVerifyRef = useRef(onVerify);
+  const onExpireRef = useRef(onExpire);
+
+  useEffect(() => {
+    onVerifyRef.current = onVerify;
+    onExpireRef.current = onExpire;
+  });
+
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
@@ -46,10 +55,10 @@ export function TurnstileWidget({ onVerify, onExpire, className }: TurnstileWidg
           widgetIdRef.current = window.turnstile.render(containerRef.current, {
             sitekey: siteKey,
             callback: (token) => {
-              if (isMounted) onVerify(token);
+              if (isMounted) onVerifyRef.current(token);
             },
             "expired-callback": () => {
-              if (isMounted && onExpire) onExpire();
+              if (isMounted && onExpireRef.current) onExpireRef.current();
             },
             theme: "light",
           });
@@ -95,7 +104,7 @@ export function TurnstileWidget({ onVerify, onExpire, className }: TurnstileWidg
         widgetIdRef.current = null;
       }
     };
-  }, [siteKey, onVerify, onExpire]);
+  }, [siteKey]);
 
   if (!siteKey) return null;
 
