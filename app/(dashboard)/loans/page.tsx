@@ -22,7 +22,7 @@ export default async function LoansPage() {
   const profile = user ? await prisma.financialProfile.findUnique({ where: { userId: user.id } }) : null;
   const currencyCode = profile?.currency ?? "INR";
 
-  const activeLoans = loans.filter((loan) => loan.outstandingBalance > 0);
+  const activeLoans = loans.filter((loan) => loan.outstandingBalance > 0.01);
   const totalOutstanding = activeLoans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
   const totalEMI = activeLoans.reduce((sum, loan) => sum + loan.emiAmount, 0);
   const weightedAverageRate =
@@ -119,7 +119,7 @@ export default async function LoansPage() {
                 <Link
                   key={loan.id}
                   href={buildLoanPath(loan.name, loan.id)}
-                  className="group block rounded-2xl border border-[#E2E8F0] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-slate-300"
+                  className="group block rounded-2xl border border-[#E2E8F0] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-slate-300 shadow-sm"
                 >
                   <div className="mb-4 flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
@@ -170,6 +170,55 @@ export default async function LoansPage() {
             })}
           </div>
         </>
+      )}
+
+      {/* Paid Off Loans Section */}
+      {loans.filter((loan) => loan.outstandingBalance <= 0.01).length > 0 && (
+        <div className="mt-10 space-y-4 pt-6 border-t border-slate-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-[#0D1F3C]">Paid Off Loans 🎉</h2>
+              <p className="text-xs text-slate-500">Historical loans that have been fully cleared.</p>
+            </div>
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 border border-emerald-200/60">
+              {loans.filter((loan) => loan.outstandingBalance <= 0.01).length} Closed
+            </span>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {loans
+              .filter((loan) => loan.outstandingBalance <= 0.01)
+              .map((loan) => (
+                <Link
+                  key={loan.id}
+                  href={buildLoanPath(loan.name, loan.id)}
+                  className="group block rounded-2xl border border-emerald-200/80 bg-emerald-50/30 p-5 transition-all hover:border-emerald-300"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
+                        ✓ PAID OFF 100%
+                      </span>
+                      <h3 className="mt-2 truncate text-base font-semibold text-[#0D1F3C] group-hover:text-emerald-700">
+                        {loan.name}
+                      </h3>
+                      <p className="text-xs text-slate-500">{loan.lender || "Completed Loan"}</p>
+                    </div>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100/70 text-emerald-700">
+                      <ExternalLink className="h-4 w-4" />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between text-xs text-slate-600 border-t border-emerald-100 pt-3">
+                    <span>Original Principal:</span>
+                    <span className="font-mono font-medium text-[#0D1F3C]">
+                      {formatCurrency(loan.principal, loan.currency ?? currencyCode)}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+          </div>
+        </div>
       )}
     </div>
   );

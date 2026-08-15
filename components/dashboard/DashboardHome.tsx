@@ -75,7 +75,7 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
       ? loans.reduce((sum, loan) => sum + loan.interestRate * loan.outstandingBalance, 0) / totalOutstanding
       : 0;
 
-  const activeLoans = useMemo(() => loans.filter((l) => l.outstandingBalance > 0), [loans]);
+  const activeLoans = useMemo(() => loans.filter((l) => l.outstandingBalance > 0.01), [loans]);
   const hasLoans = activeLoans.length > 0;
 
   const affordability = useMemo(() => {

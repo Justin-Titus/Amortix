@@ -338,7 +338,7 @@ export async function recordPayment(loanId: string, data: z.input<typeof payment
       }
     }
 
-    const newBalance = Math.max(0, loan.outstandingBalance - parsedPayment.amount);
+    const newBalance = Math.max(0, Math.round((loan.outstandingBalance - parsedPayment.amount) * 100) / 100);
 
     // Update loan balance and create payment record in a transaction
     await prisma.$transaction([
