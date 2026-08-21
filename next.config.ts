@@ -5,6 +5,22 @@ import { withSentryConfig } from "@sentry/nextjs";
 const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
+  // Prepend NetworkOnly rules for PostHog and Sentry so the service worker
+  // never intercepts those requests. Without this, Workbox's cross-origin
+  // catch-all route tries to fetch+cache them and gets blocked by CSP.
+  extendDefaultRuntimeCaching: true,
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/.*\.i\.posthog\.com\/.*/i,
+        handler: "NetworkOnly",
+      },
+      {
+        urlPattern: /^https:\/\/.*\.sentry\.io\/.*/i,
+        handler: "NetworkOnly",
+      },
+    ],
+  },
 });
 
 const nextConfig: NextConfig = {
@@ -27,7 +43,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://us.i.posthog.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.pwnedpasswords.com https://challenges.cloudflare.com https://us.i.posthog.com https://*.ingest.sentry.io; frame-src 'self' https://challenges.cloudflare.com;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://us.i.posthog.com https://us-assets.i.posthog.com https://*.i.posthog.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.pwnedpasswords.com https://challenges.cloudflare.com https://us.i.posthog.com https://us-assets.i.posthog.com https://*.i.posthog.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://*.sentry.io; worker-src 'self' blob: https://us.i.posthog.com https://us-assets.i.posthog.com https://*.i.posthog.com; child-src 'self' blob:; frame-src 'self' https://challenges.cloudflare.com;",
           },
         ],
       },

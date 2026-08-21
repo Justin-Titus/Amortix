@@ -63,8 +63,9 @@ export default function EMIOptimizerPanel({
             type="number"
             value={extraBudget}
             min={0}
+            max={50000}
             step={500}
-            onChange={(event) => onExtraBudgetChange(Number(event.target.value))}
+            onChange={(event) => onExtraBudgetChange(Math.min(50000, Math.max(0, Number(event.target.value))))}
             className="input mt-1"
           />
         </div>
@@ -75,8 +76,9 @@ export default function EMIOptimizerPanel({
               type="number"
               value={oneTimePayment}
               min={0}
-              step={5000}
-              onChange={(event) => onOneTimePaymentChange(Number(event.target.value))}
+              max={100000}
+              step={1000}
+              onChange={(event) => onOneTimePaymentChange(Math.min(100000, Math.max(0, Number(event.target.value))))}
               className="input mt-1"
             />
           </div>
