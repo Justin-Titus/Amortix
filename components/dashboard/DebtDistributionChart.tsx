@@ -21,7 +21,7 @@ export default function DebtDistributionChart({ loans }: DebtDistributionProps) 
 
   return (
     <div ref={ref} className="flex flex-row items-center gap-5 mt-6 min-h-[170px]">
-      <div className="relative w-44 h-44 flex-shrink-0">
+      <div className="relative w-44 h-44 flex-shrink-0 z-10">
         {isInView && (
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <PieChart>
@@ -41,13 +41,15 @@ export default function DebtDistributionChart({ loans }: DebtDistributionProps) 
               ))}
             </Pie>
             <Tooltip
+              wrapperStyle={{ zIndex: 20, outline: "none" }}
               formatter={(value: any) => [`₹${Number(value || 0).toLocaleString("en-IN")}`, "Balance"]}
               contentStyle={{ 
                 borderRadius: 12, 
                 border: "none", 
                 backgroundColor: "rgba(255, 255, 255, 0.98)",
-                boxShadow: "0 12px 32px rgba(13, 27, 47, 0.1)",
-                padding: "8px 12px"
+                boxShadow: "0 12px 32px rgba(13, 27, 47, 0.15)",
+                padding: "8px 12px",
+                zIndex: 20
               }}
               itemStyle={{ fontSize: "11px", fontWeight: 600, color: "#17314f" }}
               labelStyle={{ display: "none" }}
@@ -55,7 +57,7 @@ export default function DebtDistributionChart({ loans }: DebtDistributionProps) 
           </PieChart>
         </ResponsiveContainer>
         )}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none mt-0.5">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none mt-0.5 z-0">
           <p className="text-[10px] font-medium text-amortix-slate uppercase tracking-wider leading-none mb-1.5">Total</p>
           <p className="num text-[20px] font-medium text-amortix-navy leading-none">
             ₹{(total / 100000).toFixed(1)}L

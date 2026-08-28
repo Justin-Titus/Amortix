@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { openConsentBanner } from "@/lib/consent";
 
 export default function LandingFooter() {
   return (
@@ -15,7 +18,7 @@ export default function LandingFooter() {
           </div>
         </div>
 
-        <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-4 text-xs tracking-[0.18em] text-amortix-slate">
+        <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-4 text-xs tracking-[0.18em] text-amortix-slate uppercase">
           <Link href="/privacy" className="hover:text-amortix-navy">
             Privacy policy
           </Link>
@@ -25,6 +28,13 @@ export default function LandingFooter() {
           <Link href="/data-rights" className="hover:text-amortix-navy">
             Data rights
           </Link>
+          <button
+            type="button"
+            onClick={openConsentBanner}
+            className="hover:text-amortix-navy cursor-pointer transition-colors text-left uppercase"
+          >
+            Cookie preferences
+          </button>
         </nav>
 
         <div className="flex flex-col items-start lg:items-end gap-1">

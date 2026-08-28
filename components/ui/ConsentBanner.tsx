@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Shield, X, ChevronDown, ChevronUp, Lock, Check } from "lucide-react";
 import {
+  readConsent,
   writeConsent,
   acceptAllConsent,
   declineAllConsent,
@@ -22,13 +23,35 @@ export function ConsentBanner() {
   const [marketing, setMarketing] = useState<ConsentDecision>("denied");
 
   useEffect(() => {
+    const syncWithConsent = () => {
+      const saved = readConsent();
+      setAnalytics(saved.analytics);
+      setFunctional(saved.functional);
+      setMarketing(saved.marketing);
+    };
+
+    syncWithConsent();
     if (isConsentPending()) {
       setVisible(true);
     }
 
-    const handler = () => setVisible(false);
-    window.addEventListener("amortix:consent-changed", handler);
-    return () => window.removeEventListener("amortix:consent-changed", handler);
+    const handleConsentChanged = () => {
+      setVisible(false);
+    };
+
+    const handleShowBanner = () => {
+      syncWithConsent();
+      setExpanded(true);
+      setVisible(true);
+    };
+
+    window.addEventListener("amortix:consent-changed", handleConsentChanged);
+    window.addEventListener("amortix:show-consent-banner", handleShowBanner);
+
+    return () => {
+      window.removeEventListener("amortix:consent-changed", handleConsentChanged);
+      window.removeEventListener("amortix:show-consent-banner", handleShowBanner);
+    };
   }, []);
 
   const handleSaveChoices = useCallback(() => {

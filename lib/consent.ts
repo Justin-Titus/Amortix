@@ -67,7 +67,6 @@ export function writeConsent(update: Partial<Omit<ConsentState, "version" | "dec
     decidedAt: Date.now(),
     version: 1,
   };
-  localStorage.getItem(CONSENT_KEY);
   localStorage.setItem(CONSENT_KEY, JSON.stringify(next));
 
   // Dispatch a custom event so other tabs / components can react
@@ -124,3 +123,11 @@ export function isConsentPending(): boolean {
 export function isConsentGranted(purpose: ConsentPurpose): boolean {
   return readConsent()[purpose] === "granted";
 }
+
+/** Triggers the consent banner to open for managing choices / withdrawing consent. */
+export function openConsentBanner(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("amortix:show-consent-banner"));
+  }
+}
+
