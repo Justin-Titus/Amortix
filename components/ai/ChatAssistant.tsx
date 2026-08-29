@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { TextStreamChatTransport } from "ai";
-import { Bot, Send, User, MessageSquarePlus, Copy, Check, ExternalLink, Sparkles } from "lucide-react";
+import { Bot, Send, MessageSquarePlus, Copy, Check, ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

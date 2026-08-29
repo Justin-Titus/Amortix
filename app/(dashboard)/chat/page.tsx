@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import ChatAssistant from "@/components/ai/ChatAssistant";
 import { getLoans } from "@/app/actions/loan";
 import { EmptyState } from "@/components/ui/EmptyState";

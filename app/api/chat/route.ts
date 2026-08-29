@@ -1,4 +1,4 @@
-import { type ModelMessage, type UIMessage } from "ai";
+import { type ModelMessage } from "ai";
 import { streamAIChat } from "@/lib/ai";
 import { formatCurrency } from "@/lib/calculations";
 import { createClient } from "@/lib/supabase/server";

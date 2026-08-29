@@ -51,7 +51,7 @@ export default function LoginForm({
       // router.replace() triggers a client-side RSC navigation that the SW
       // can intercept and hang; window.location.href forces a fresh full-page
       // load which also ensures the Supabase session cookie is read server-side.
-      window.location.href = callbackUrl || "/dashboard";
+      window.location.assign(callbackUrl || "/dashboard");
     } catch (error) {
       const message =
         error instanceof Error
