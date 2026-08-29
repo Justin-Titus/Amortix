@@ -1,4 +1,4 @@
-import { convertToModelMessages, type UIMessage } from "ai";
+import { type ModelMessage, type UIMessage } from "ai";
 import { streamAIChat } from "@/lib/ai";
 import { formatCurrency } from "@/lib/calculations";
 import { createClient } from "@/lib/supabase/server";
@@ -38,22 +38,27 @@ async function buildFinancialContext(userId: string) {
     const totalOutstanding = loans.reduce((sum: number, loan: ChatLoan) => sum + loan.outstandingBalance, 0);
     const totalEMI = loans.reduce((sum: number, loan: ChatLoan) => sum + loan.emiAmount, 0);
 
+    const sortedByInterest = [...loans].sort((a, b) => b.interestRate - a.interestRate);
+    const sortedByBalance = [...loans].sort((a, b) => a.outstandingBalance - b.outstandingBalance);
+
     const loansText = loans
       .map(
         (loan: ChatLoan) =>
-          `- ${loan.name} (${loan.loanType}): Balance ${formatCurrency(
+          `- "${loan.name}" (${loan.loanType}): Balance ${formatCurrency(
             loan.outstandingBalance,
             loan.currency ?? currencyCode
-          )}, EMI ${formatCurrency(loan.emiAmount, loan.currency ?? currencyCode)}, Interest ${loan.interestRate}% (${loan.rateType})`
+          )}, Monthly EMI ${formatCurrency(loan.emiAmount, loan.currency ?? currencyCode)}, Interest ${loan.interestRate}% (${loan.rateType})`
       )
       .join("\n");
 
     contextParts.push(
-      `Loans: ${loans.length} active loans. Total Outstanding Debt ${formatCurrency(
+      `Loans Overview: ${loans.length} active loans. Total Outstanding Debt ${formatCurrency(
         totalOutstanding,
         currencyCode
       )}. Total Monthly EMI ${formatCurrency(totalEMI, currencyCode)}.`,
-      `Loan Details:\n${loansText}`
+      `Loan Details:\n${loansText}`,
+      `Highest Interest Rate Target (Avalanche Priority): "${sortedByInterest[0].name}" at ${sortedByInterest[0].interestRate}% interest.`,
+      `Smallest Principal Target (Snowball Priority): "${sortedByBalance[0].name}" balance ${formatCurrency(sortedByBalance[0].outstandingBalance, currencyCode)}.`
     );
   }
 
@@ -133,53 +138,69 @@ export async function POST(req: Request) {
     }
 
     const parsedBody = safeParseResult.data;
-    const messages = parsedBody.messages;
+    const rawMessages = parsedBody.messages;
+
+    // Keep only the last 6 messages to prevent hitting LLM token limits (Request Entity Too Large)
+    let messages = rawMessages.length > 6 ? rawMessages.slice(-6) : rawMessages;
+
+    // Further protect against huge payloads by truncating content
+    messages = messages.map((m: any, index: number) => {
+      let contentStr = "";
+      if (typeof m.content === "string" && m.content.trim()) {
+        contentStr = m.content;
+      } else if (Array.isArray(m.parts)) {
+        contentStr = m.parts
+          .filter((p: any) => p && (p.type === "text" || typeof p.text === "string"))
+          .map((p: any) => p.text || "")
+          .join("");
+      } else if (typeof m.text === "string") {
+        contentStr = m.text;
+      }
+
+      // Strip any internal thinking blocks from historical messages so the LLM doesn't mimic them
+      contentStr = contentStr.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+
+      const isLatest = index === messages.length - 1;
+      const maxLength = isLatest ? 6000 : 1000; // Allow 6000 chars for newest prompt, 1000 for history
+
+      if (contentStr.length > maxLength) {
+        contentStr = contentStr.substring(0, maxLength) + "... [truncated]";
+      }
+      
+      return { 
+        role: m.role, 
+        content: contentStr 
+      };
+    });
 
     const financialContext = await buildFinancialContext(userId);
 
-    const uiMessagesWithoutIds = messages.map((message: any) => {
-      let contentStr = message.content;
-      let parts = message.parts;
+    const modelMessages: ModelMessage[] = messages.map((message: any) => ({
+      role: message.role as "user" | "assistant",
+      content: String(message.content ?? ""),
+    }));
 
-      if (!parts) {
-        parts = [{ type: "text", text: contentStr || "" }];
-      }
-      if (!contentStr) {
-        contentStr = parts
-          .filter((p: any) => p.type === "text")
-          .map((p: any) => p.text)
-          .join("");
-      }
+    const systemPrompt = `You are Amortix, a professional AI financial advisor built into the Amortix debt management platform. Your ONLY purpose is to help users understand and accelerate their debt repayment.
 
-      return {
-        role: message.role,
-        content: contentStr || "",
-        parts: parts,
-      };
-    });
-    const modelMessages = await convertToModelMessages(
-      uiMessagesWithoutIds as unknown as Omit<UIMessage, "id">[]
-    );
+The user's verified financial data is provided below. Use it to give specific, personalized advice.
 
-
-    const systemPrompt = `
-You are Amortix, an advanced AI financial advisor specializing in debt management and repayment strategies.
-You must be professional, empathetic, and highly analytical.
-
-Here is the current financial context of the user:
+<user_financial_data>
 ${financialContext}
+</user_financial_data>
 
-Instructions:
-1. Provide actionable advice based on their current loans.
-2. Explain the benefits of Avalanche, Snowball, or Hybrid strategies if asked.
-3. If they ask about saving money, refer to their specific loan balances and interest rates.
-4. Keep your responses concise, structured (use bullet points or bold text), and easy to read.
-5. If the user has no loans, encourage them to add loans in the dashboard to get personalized advice.
-6. Under no circumstances should you provide investment advice (like stocks or crypto) or legal advice. Stick to debt management.
-7. CRITICAL: Pay very close attention to exact numbers the user provides (e.g., if they say 3000, use exactly 3000). Do NOT auto-scale or assume they meant lakhs (e.g. 300,000) just because their loan balances are large. Never alter user-provided amounts.
-8. CRITICAL CURRENCY RULE: Unless the user explicitly specifies a different currency symbol (like $), assume ALL numbers they provide are in their profile's native currency (e.g. if their profile is in INR, "3000" means ₹3,000). Do NOT attempt to convert numbers into USD or any other currency.
-9. WARNING: Do NOT attempt to calculate exact compound interest, EMI schedules, or exact payoff dates. You are an LLM and cannot do complex math. Give strategic advice, but always tell the user to use the Amortix dashboard calculators for exact numerical savings.
-`;
+CRITICAL RULES YOU MUST FOLLOW:
+1. DIRECT ANSWER & NO THINKING TAGS: Answer immediately. Never output internal thinking steps, chain-of-thought reasoning, or <think> tags. Output ONLY the final response. Never start with a generic greeting or introduction.
+2. FACTUAL ACCURACY: Only reference loans, balances, and rates from the <user_financial_data> block. Never invent data.
+3. USE EXACT LOAN NAMES in quotes as they appear in the data.
+4. HELPFUL CALCULATIONS: When asked about extra payments, interest savings, or payoff timelines, provide clear numerical estimates first, then link to the [Debt Strategy Planner](/strategy) for exact schedules.
+5. DEBT FOCUS ONLY: No investment advice (stocks, crypto). No legal advice.
+6. LINK TO TOOLS when relevant:
+   - [Debt Strategy Planner](/strategy)
+   - [Debt Analysis](/analysis)
+   - [My Loans](/loans)
+   - [Financial Insights](/insights)
+7. RESPONSE FORMAT: Use bullet points and short sections. Be informative and helpful — avoid repeating the user's full loan table unless explicitly asked.
+8. APP & OFF-TOPIC QUERIES: If asked about Amortix itself (e.g., "what is Amortix?", "amortix means"), explain that Amortix is an AI-powered debt management platform designed to help users structure repayment strategies, calculate interest savings, and become debt-free faster. For completely unrelated topics (politics, sports, general trivia like "cm of tamilnadu"), reply only: "I'm your Amortix financial advisor — I can only help with debt management and repayment strategies."`;
 
     return await streamAIChat(modelMessages, systemPrompt);
   } catch (error) {

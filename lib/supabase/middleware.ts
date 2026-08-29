@@ -36,16 +36,33 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
   const isAuthPage = authPaths.some((path) => pathname.startsWith(path));
-  const hasAuthCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'));
 
   let user = null;
 
-  // Only perform network auth check if user has session cookies or is accessing protected/auth routes
-  if (hasAuthCookie || isProtected || isAuthPage) {
+  // Only perform network auth check if accessing protected or auth routes
+  if (isProtected || isAuthPage) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
+        global: {
+          fetch: async (url: RequestInfo | URL, options?: RequestInit) => {
+            try {
+              return await fetch(url, {
+                ...options,
+                headers: {
+                  ...options?.headers,
+                  Connection: 'close',
+                },
+              });
+            } catch {
+              return new Response(JSON.stringify({ error: 'network_timeout' }), {
+                status: 400,
+                headers: { 'content-type': 'application/json' },
+              });
+            }
+          },
+        },
         cookies: {
           getAll() {
             return request.cookies.getAll()
@@ -64,10 +81,12 @@ export async function updateSession(request: NextRequest) {
     )
 
     try {
-      const { data } = await supabase.auth.getUser()
-      user = data?.user ?? null;
-    } catch (error) {
-      console.error('Middleware AuthError:', error)
+      const { data, error } = await supabase.auth.getUser();
+      if (!error && data?.user) {
+        user = data.user;
+      }
+    } catch {
+      user = null;
     }
   }
 

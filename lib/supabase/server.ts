@@ -38,6 +38,22 @@ export async function createClient() {
       },
       global: {
         headers: authHeader ? { Authorization: authHeader } : undefined,
+        fetch: async (url: RequestInfo | URL, options?: RequestInit) => {
+          try {
+            return await fetch(url, {
+              ...options,
+              headers: {
+                ...options?.headers,
+                Connection: 'close',
+              },
+            });
+          } catch {
+            return new Response(JSON.stringify({ error: 'network_timeout' }), {
+              status: 400,
+              headers: { 'content-type': 'application/json' },
+            });
+          }
+        },
       },
     }
   )

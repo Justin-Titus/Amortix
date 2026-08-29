@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createClient } from "@/lib/supabase/client";
@@ -21,7 +20,7 @@ export default function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
+
 
   const {
     register,
@@ -48,7 +47,11 @@ export default function LoginForm({
         return;
       }
 
-      router.replace(callbackUrl || "/dashboard");
+      // Use hard navigation to bypass PWA Service Worker cache.
+      // router.replace() triggers a client-side RSC navigation that the SW
+      // can intercept and hang; window.location.href forces a fresh full-page
+      // load which also ensures the Supabase session cookie is read server-side.
+      window.location.href = callbackUrl || "/dashboard";
     } catch (error) {
       const message =
         error instanceof Error

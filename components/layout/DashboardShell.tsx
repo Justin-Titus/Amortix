@@ -78,9 +78,13 @@ export default function DashboardShell({
       <main className="relative pt-14 lg:pl-60 lg:pt-14">
         <section
           ref={contentRef}
-          className="h-[calc(100vh-56px)] overflow-y-auto px-3 pb-24 pt-5 sm:px-5 sm:pb-24 md:px-6 md:pb-20 lg:h-[calc(100vh-56px)] lg:px-7 lg:pb-10"
+          className={`h-[calc(100vh-56px)] overflow-y-auto ${
+            pathname === "/chat"
+              ? "p-2 lg:p-4"
+              : "px-3 pb-24 pt-5 sm:px-5 sm:pb-24 md:px-6 md:pb-20 lg:px-7 lg:pb-10"
+          }`}
         >
-          <div className="mx-auto max-w-355 w-full">{children}</div>
+          <div className="mx-auto max-w-355 w-full h-full">{children}</div>
         </section>
       </main>
 

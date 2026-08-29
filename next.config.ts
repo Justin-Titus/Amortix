@@ -4,13 +4,20 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const withPWA = withPWAInit({
   dest: "public",
-  disable: process.env.NODE_ENV === "development",
+  // Disable SW in development AND in local production builds (pnpm start).
+  // The SW intercepts Supabase auth requests locally and causes hangs.
+  // On Vercel, VERCEL=1 is always set so the SW will be active there.
+  disable: process.env.NODE_ENV === "development" || (!process.env.VERCEL && !process.env.CI),
   // Prepend NetworkOnly rules for PostHog and Sentry so the service worker
   // never intercepts those requests. Without this, Workbox's cross-origin
   // catch-all route tries to fetch+cache them and gets blocked by CSP.
   extendDefaultRuntimeCaching: true,
   workboxOptions: {
     runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+        handler: "NetworkOnly",
+      },
       {
         urlPattern: /^https:\/\/.*\.i\.posthog\.com\/.*/i,
         handler: "NetworkOnly",
@@ -53,7 +60,11 @@ const nextConfig: NextConfig = {
 
 const configWithPWA = withPWA(nextConfig);
 
-export default withSentryConfig(configWithPWA, {
+// Exclude Sentry in local builds to speed up the process and avoid errors
+// Local builds won't have VERCEL or CI env variables set.
+const isLocal = !process.env.VERCEL && !process.env.CI;
+
+export default isLocal ? configWithPWA : withSentryConfig(configWithPWA, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
 
@@ -62,7 +73,6 @@ export default withSentryConfig(configWithPWA, {
 
   // Upload source maps only in production
   widenClientFileUpload: true,
-  disableLogger: true,
 
   // Don't block builds if Sentry is misconfigured
   errorHandler(err: Error) {

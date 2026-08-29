@@ -31,8 +31,21 @@ export function ConsentBanner() {
     };
 
     syncWithConsent();
-    if (isConsentPending()) {
-      setVisible(true);
+
+    let timer: NodeJS.Timeout;
+    const showIfPending = () => {
+      if (isConsentPending()) {
+        // Delay consent dialog display by 3.5s so hero section animations complete and user focuses on the page
+        timer = setTimeout(() => {
+          setVisible(true);
+        }, 3500);
+      }
+    };
+
+    if (document.readyState === "complete") {
+      showIfPending();
+    } else {
+      window.addEventListener("load", showIfPending, { once: true });
     }
 
     const handleConsentChanged = () => {
@@ -49,6 +62,8 @@ export function ConsentBanner() {
     window.addEventListener("amortix:show-consent-banner", handleShowBanner);
 
     return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("load", showIfPending);
       window.removeEventListener("amortix:consent-changed", handleConsentChanged);
       window.removeEventListener("amortix:show-consent-banner", handleShowBanner);
     };
