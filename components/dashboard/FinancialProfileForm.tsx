@@ -35,12 +35,30 @@ const creditOptions = [
 ];
 
 export function FinancialProfileForm({ defaultValues }: { defaultValues: FinancialProfileFormValues }) {
-  const { register, handleSubmit, watch, setValue } = useForm<FinancialProfileFormValues>({ defaultValues });
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { isDirty },
+  } = useForm<FinancialProfileFormValues>({ defaultValues });
+
   const [isSaving, setIsSaving] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const hasEmergencyFund = watch("hasEmergencyFund");
+  const currentValues = watch();
+  const hasEmergencyFund = currentValues.hasEmergencyFund;
+
+  const isChanged =
+    isDirty ||
+    currentValues.monthlyIncome !== defaultValues.monthlyIncome ||
+    currentValues.monthlyExpenses !== defaultValues.monthlyExpenses ||
+    currentValues.creditScoreRange !== defaultValues.creditScoreRange ||
+    currentValues.employmentType !== defaultValues.employmentType ||
+    Boolean(currentValues.hasEmergencyFund) !== Boolean(defaultValues.hasEmergencyFund) ||
+    currentValues.emergencyFundMonths !== defaultValues.emergencyFundMonths;
 
   const onSubmit = async (data: FinancialProfileFormValues) => {
     recordLocalUpdate();
@@ -60,6 +78,7 @@ export function FinancialProfileForm({ defaultValues }: { defaultValues: Financi
             ? parseInt(data.emergencyFundMonths, 10)
             : undefined,
       });
+      reset(data);
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 3000);
     } catch (error: unknown) {
@@ -164,8 +183,8 @@ export function FinancialProfileForm({ defaultValues }: { defaultValues: Financi
 
       <button
         type="submit"
-        disabled={isSaving}
-        className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={isSaving || !isChanged}
+        className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500"
       >
         {isSaving ? (
           <>

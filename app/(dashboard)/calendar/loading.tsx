@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonHero, SkeletonLine } from "@/components/ui/Skele
 
 export default function CalendarLoading() {
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8 pb-3">
       <SkeletonHero badgeWidth="w-32" titleWidth="w-48" descriptionWidth="w-full max-w-lg" stats={2} withActions={false} />
 
       <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">

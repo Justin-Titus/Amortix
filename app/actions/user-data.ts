@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { withServerAction } from "@/lib/server-action-wrapper";
-import { logInfo } from "@/lib/logger";
+import { logInfo, logWarn } from "@/lib/logger";
 
 /**
  * Exports all personal data belonging to the authenticated user in full compliance
@@ -111,29 +111,54 @@ export async function deleteAccountAndData() {
 
     const userId = user.id;
 
-    // Delete related records in Prisma with safe optional model checks
-    const ops: Promise<unknown>[] = [];
+    // Step 1: Clean up non-cascading standalone models created by the user
+    try {
+      if (prisma.workspaceInvite) {
+        await prisma.workspaceInvite.deleteMany({ where: { invitedBy: userId } });
+      }
+      if (prisma.workspace) {
+        await prisma.workspace.deleteMany({ where: { createdBy: userId } });
+      }
+      if (prisma.dataRightsRequest && user.email) {
+        await prisma.dataRightsRequest.deleteMany({ where: { email: user.email } });
+      }
+    } catch (cleanupErr) {
+      logWarn("cleanup_standalone_records_warning", { userId, error: cleanupErr });
+    }
 
-    if (prisma.payment) ops.push(prisma.payment.deleteMany({ where: { loan: { userId } } }));
-    if (prisma.repaymentPlan) ops.push(prisma.repaymentPlan.deleteMany({ where: { loan: { userId } } }));
-    if (prisma.loan) ops.push(prisma.loan.deleteMany({ where: { userId } }));
-    if (prisma.workspaceMember) ops.push(prisma.workspaceMember.deleteMany({ where: { userId } }));
-    if (prisma.workspaceInvite) ops.push(prisma.workspaceInvite.deleteMany({ where: { invitedBy: userId } }));
-    if (prisma.workspace) ops.push(prisma.workspace.deleteMany({ where: { createdBy: userId } }));
-    if (prisma.consentRecord) ops.push(prisma.consentRecord.deleteMany({ where: { userId } }));
-    if (prisma.notification) ops.push(prisma.notification.deleteMany({ where: { userId } }));
-    if (prisma.chatSession) ops.push(prisma.chatSession.deleteMany({ where: { userId } }));
-    if (prisma.healthSnapshot) ops.push(prisma.healthSnapshot.deleteMany({ where: { userId } }));
-    if (prisma.rateLimit) ops.push(prisma.rateLimit.deleteMany({ where: { userId } }));
-    if (prisma.dataRightsRequest && user.email) ops.push(prisma.dataRightsRequest.deleteMany({ where: { email: user.email } }));
-    if (prisma.financialProfile) ops.push(prisma.financialProfile.deleteMany({ where: { userId } }));
-    if (prisma.user) ops.push(prisma.user.delete({ where: { id: userId } }));
+    // Step 2: Delete user from public."User".
+    // In PostgreSQL, all relational models (FinancialProfile, Loan, Payment, RepaymentPlan,
+    // ChatSession, HealthSnapshot, Notification, RateLimit, WorkspaceMember, ConsentRecord)
+    // are configured with ON DELETE CASCADE.
+    // In addition, the PostgreSQL trigger `on_user_deleted` automatically deletes auth.users.
+    try {
+      await prisma.user.delete({ where: { id: userId } });
+    } catch (userDeleteErr) {
+      logWarn("direct_user_delete_fallback_triggered", { userId, error: userDeleteErr });
 
-    await Promise.allSettled(ops);
+      // Fallback manual cleanup in case of schema drift
+      if (prisma.payment) await prisma.payment.deleteMany({ where: { loan: { userId } } }).catch(() => {});
+      if (prisma.repaymentPlan) await prisma.repaymentPlan.deleteMany({ where: { loan: { userId } } }).catch(() => {});
+      if (prisma.loan) await prisma.loan.deleteMany({ where: { userId } }).catch(() => {});
+      if (prisma.financialProfile) await prisma.financialProfile.deleteMany({ where: { userId } }).catch(() => {});
+      if (prisma.chatSession) await prisma.chatSession.deleteMany({ where: { userId } }).catch(() => {});
+      if (prisma.healthSnapshot) await prisma.healthSnapshot.deleteMany({ where: { userId } }).catch(() => {});
+      if (prisma.notification) await prisma.notification.deleteMany({ where: { userId } }).catch(() => {});
+      if (prisma.workspaceMember) await prisma.workspaceMember.deleteMany({ where: { userId } }).catch(() => {});
+      if (prisma.consentRecord) await prisma.consentRecord.deleteMany({ where: { userId } }).catch(() => {});
+      await prisma.user.delete({ where: { id: userId } });
+    }
+
+    // Step 3: Defense-in-depth safety net — ensure auth.users is purged even if the trigger was bypassed
+    try {
+      await prisma.$executeRawUnsafe(`DELETE FROM auth.users WHERE id = $1::uuid`, userId);
+    } catch (authErr) {
+      // Ignored if trigger already deleted the user record
+    }
 
     logInfo("user_account_erased_dpdp", { userId, email: user.email });
 
-    // Sign out user session
+    // Step 4: Sign out user session
     await supabase.auth.signOut();
 
     return { success: true, message: "Your account and all associated personal data have been permanently deleted." };

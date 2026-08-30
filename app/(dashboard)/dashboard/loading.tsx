@@ -1,9 +1,9 @@
-import { SkeletonBlock, SkeletonHero, SkeletonMetricGrid, SkeletonLine, SkeletonList } from "@/components/ui/Skeletons";
+import { SkeletonBlock, SkeletonHero, SkeletonMetricGrid, SkeletonLine } from "@/components/ui/Skeletons";
 
 export default function DashboardLoading() {
   return (
-    <div className="space-y-6">
-      <SkeletonHero badgeWidth="w-40" titleWidth="w-64" descriptionWidth="w-full max-w-2xl" stats={4} />
+    <div className="space-y-6 pb-3">
+      <SkeletonHero badgeWidth="w-40" titleWidth="w-64" descriptionWidth="w-full max-w-2xl" stats={3} />
       
       <section>
         <SkeletonMetricGrid count={4} />
@@ -18,7 +18,7 @@ export default function DashboardLoading() {
             <SkeletonBlock className="h-64 w-full rounded-[var(--radius-card)]" />
           </div>
 
-          {/* Active Loans List Placeholder */}
+          {/* Priority Loans Preview Placeholder (3 items) */}
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -27,7 +27,7 @@ export default function DashboardLoading() {
               </div>
               <SkeletonLine className="h-4 w-16" />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="rounded-card border border-amortix-border-light bg-white/80 p-3 shadow-[0_12px_28px_rgba(9,17,31,0.05)]">
                   <div className="mb-2 flex justify-between">
@@ -50,16 +50,6 @@ export default function DashboardLoading() {
             <div className="w-full space-y-3">
               <SkeletonLine className="h-4 w-24" />
               <SkeletonLine className="h-12 w-full" />
-            </div>
-          </div>
-          
-          {/* Analysis Workspace Card Placeholder */}
-          <div className="card flex items-start gap-3">
-            <SkeletonBlock className="h-12 w-12 rounded-2xl" />
-            <div className="w-full space-y-3">
-              <SkeletonLine className="h-4 w-32" />
-              <SkeletonLine className="h-10 w-full" />
-              <SkeletonLine className="h-4 w-24" />
             </div>
           </div>
         </div>

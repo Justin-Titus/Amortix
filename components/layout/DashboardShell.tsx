@@ -81,10 +81,10 @@ export default function DashboardShell({
           className={`h-[calc(100vh-56px)] overflow-y-auto ${
             pathname === "/chat"
               ? "p-2 lg:p-4"
-              : "px-3 pb-24 pt-5 sm:px-5 sm:pb-24 md:px-6 md:pb-20 lg:px-7 lg:pb-10"
+              : "px-3 pb-24 pt-5 sm:px-5 sm:pb-24 md:px-6 md:pb-20 lg:px-7 lg:pb-0"
           }`}
         >
-          <div className="mx-auto max-w-355 w-full h-full">{children}</div>
+          <div className={`mx-auto max-w-355 w-full ${pathname === "/chat" ? "h-full" : "min-h-full pb-3"}`}>{children}</div>
         </section>
       </main>
 

@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonLine } from "@/components/ui/Skeletons";
 
 export default function JoinWorkspaceLoading() {
   return (
-    <div className="mx-auto max-w-md mt-16 card p-6 md:p-8 space-y-6 text-center shadow-xl border border-slate-100" role="status" aria-live="polite" aria-busy="true">
+    <div className="mx-auto max-w-md mt-16 mb-3 card p-6 md:p-8 space-y-6 text-center shadow-xl border border-slate-100" role="status" aria-live="polite" aria-busy="true">
       <span className="sr-only">Loading invitation details...</span>
 
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50/50">

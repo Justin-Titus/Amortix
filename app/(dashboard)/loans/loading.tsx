@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonHero, SkeletonMetricGrid, SkeletonLine } from "@
 
 export default function LoansLoading() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-3">
       <SkeletonHero badgeWidth="w-32" titleWidth="w-48" descriptionWidth="w-full max-w-2xl" stats={0} withActions={true} />
       
       <SkeletonMetricGrid count={4} />

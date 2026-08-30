@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonHero, SkeletonLine } from "@/components/ui/Skele
 
 export default function InsightsLoading() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-3">
       <SkeletonHero badgeWidth="w-40" titleWidth="w-32" descriptionWidth="w-full max-w-xl" stats={3} withActions={false} />
 
       <section className="space-y-3">

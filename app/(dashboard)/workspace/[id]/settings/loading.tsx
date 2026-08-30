@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonHero, SkeletonLine } from "@/components/ui/Skele
 
 export default function WorkspaceSettingsLoading() {
   return (
-    <div className="space-y-6" role="status" aria-live="polite" aria-busy="true">
+    <div className="space-y-6 pb-3" role="status" aria-live="polite" aria-busy="true">
       <span className="sr-only">Loading settings...</span>
 
       <div className="flex items-center">

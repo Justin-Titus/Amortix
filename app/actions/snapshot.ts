@@ -50,6 +50,11 @@ export async function captureMonthlySnapshot(userId: string): Promise<void> {
       return;
     }
 
+    // Never capture snapshots if the user has no loans AND no income data
+    if (loans.length === 0 && (!profile.monthlyIncome || profile.monthlyIncome <= 0)) {
+      return;
+    }
+
     const totalEMI = loans.reduce((sum: number, loan: SnapshotLoan) => sum + loan.emiAmount, 0);
     const totalOutstanding = loans.reduce((sum: number, loan: SnapshotLoan) => sum + loan.outstandingBalance, 0);
     const otherMonthlyDebt = typeof profile.otherMonthlyDebt === "number" ? profile.otherMonthlyDebt : 0;

@@ -3,17 +3,11 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { AlertTriangle, ArrowRight, MessageSquarePlus, Sparkles } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import { ChartContainer } from "@/components/ui/ChartContainer";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   formatCurrency,
-  formatCompactCurrency,
   calculateAffordabilityScore,
-  getAffordabilityZoneLabel,
-  calculateStrategy,
   getProjectedPayoffDate,
-  type StrategyLoanInput,
 } from "@/lib/calculations";
 import { fadeUpVariants, pageTransition, staggerContainer } from "@/lib/animations";
 import AffordabilityGauge from "@/components/dashboard/AffordabilityGauge";
@@ -54,16 +48,6 @@ type DashboardHomeProps = {
 
 const loanColors = ["#17314f", "#118c76", "#f59f3a", "#378ADD", "#d14d5b", "#64748b"];
 
-function scoreColor(score: number): "default" | "emerald" | "amber" | "red" {
-  if (score >= 75) return "emerald";
-  if (score >= 50) return "amber";
-  return "red";
-}
-
-function scoreZoneLabel(score: number): string {
-  return getAffordabilityZoneLabel(score);
-}
-
 export default function DashboardHome({ loans, userName, profile, snapshots }: DashboardHomeProps) {
   const reduce = useReducedMotion();
   const currencyCode = profile?.currency ?? "INR";
@@ -77,6 +61,10 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
 
   const activeLoans = useMemo(() => loans.filter((l) => l.outstandingBalance > 0.01), [loans]);
   const hasLoans = activeLoans.length > 0;
+
+  const priorityLoans = useMemo(() => {
+    return [...activeLoans].sort((a, b) => b.interestRate - a.interestRate).slice(0, 3);
+  }, [activeLoans]);
 
   const affordability = useMemo(() => {
     if (
@@ -105,18 +93,9 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
 
   const affordabilityScore = affordability?.score ?? null;
   const hasAffordability = affordabilityScore !== null;
-  const leakProfile = profile && profile.monthlyIncome != null && profile.monthlyExpenses != null
-    ? {
-        monthlyIncome: profile.monthlyIncome,
-        monthlyExpenses: profile.monthlyExpenses,
-        hasEmergencyFund: Boolean(profile.hasEmergencyFund),
-        emergencyFundMonths: profile.emergencyFundMonths ?? 0,
-      }
-    : null;
 
   const debtFreeDate = hasLoans ? getProjectedPayoffDate(activeLoans) : null;
   const projectedMonths = debtFreeDate ? Math.max(0, (debtFreeDate.getFullYear() - new Date().getFullYear()) * 12 + debtFreeDate.getMonth() - new Date().getMonth()) : 0;
-
 
   const distributionData = useMemo(() => {
     return loans
@@ -136,31 +115,18 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
   })();
 
   const firstName = userName.trim().split(" ")[0] || userName;
-  const snapshotCount = useMemo(() => {
-    const uniqueMonths = new Set(
-      snapshots.map((snapshot) =>
-        new Date(snapshot.capturedAt).toLocaleDateString("en-US", {
-          month: "2-digit",
-          year: "numeric",
-        })
-      )
+
+  const validSnapshots = useMemo(() => {
+    return snapshots.filter(
+      (snapshot) =>
+        snapshot.totalOutstanding > 0 ||
+        snapshot.dtiRatio > 0 ||
+        (hasLoans && snapshot.affordabilityScore > 0)
     );
-    return uniqueMonths.size;
-  }, [snapshots]);
+  }, [snapshots, hasLoans]);
 
   const emiToIncomeRatio = profile?.monthlyIncome ? Math.round((totalEMI / profile.monthlyIncome) * 100) : 0;
-
-  const getDynamicInsight = (): string => {
-    if (!hasLoans) return "Add your first loan to begin tracking repayment momentum.";
-
-    const highest = activeLoans.reduce((best, candidate) => (best.interestRate > candidate.interestRate ? best : candidate), activeLoans[0]);
-
-    if (emiToIncomeRatio > 45) {
-      return `Your EMI load is at ${emiToIncomeRatio}% of income, which is above the 40% comfort zone.`;
-    }
-
-    return `Your highest-cost loan is at ${highest.interestRate}% - prioritize it in your strategy.`;
-  };
+  const monthlySurplus = profile?.monthlyIncome ? Math.max(0, profile.monthlyIncome - (profile.monthlyExpenses ?? 0) - totalEMI) : null;
 
   const insightText = useMemo(() => {
     if (!hasLoans) {
@@ -186,11 +152,11 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
     return `By allocating an additional ₹5,000 toward your outstanding debt, you can shorten your payoff horizon and clear the balance much faster.`;
   }, [hasLoans, activeLoans, emiToIncomeRatio]);
 
+  // Clean, meaningful portfolio stats
   const heroStats = [
-    { label: "Open loans", value: String(activeLoans.length), muted: !hasLoans },
-    { label: "Total outstanding", value: formatCompactCurrency(totalOutstanding, currencyCode), muted: !hasLoans },
-    { label: "Affordability score", value: hasAffordability ? `${affordabilityScore}/100` : "-", muted: !hasAffordability, color: hasAffordability && affordabilityScore !== null ? affordabilityScore >= 70 ? "text-emerald-500" : affordabilityScore >= 40 ? "text-amber-500" : "text-red-500" : "text-slate-400" },
-    { label: "Monthly snapshots", value: String(snapshotCount), muted: snapshotCount === 0 },
+    { label: "Active loans", value: String(activeLoans.length), muted: !hasLoans },
+    { label: "Debt-free by", value: debtFreeDate ? debtFreeDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" }) : "-", muted: !hasLoans },
+    { label: "Average rate", value: hasLoans ? `${avgRate.toFixed(1)}%` : "-", muted: !hasLoans },
   ];
 
   return (
@@ -212,25 +178,10 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
           </>
         }
       >
-        {emiToIncomeRatio > 100 ? (
+        {emiToIncomeRatio > 100 && (
           <div className="flex items-center gap-3 rounded-full border border-red-500/20 bg-red-50 px-4 py-2 mt-4 animate-pulse">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <p className="text-xs font-semibold text-red-700">Critical: Your EMI obligations exceed your monthly income.</p>
-          </div>
-        ) : (
-          <div className="flex flex-wrap items-center gap-3 mt-4">
-            <div className="rounded-full border border-amortix-border-light bg-amortix-frost px-4 py-1.5 transition-all hover:bg-slate-50 cursor-default">
-              <div className="flex items-center gap-3">
-                <div className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-[11px] font-medium text-amortix-navy">
-                  Dynamic insight: {hasLoans ? getDynamicInsight() : "Add a loan to unlock live repayments, health scoring, and strategy guidance."}
-                </p>
-              </div>
-            </div>
-            <Link href="/chat" className="inline-flex items-center gap-1.5 text-xs font-medium text-amortix-emerald hover:text-emerald-700 transition-colors">
-              Ask AI advisor
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
           </div>
         )}
       </PageHero>
@@ -251,11 +202,25 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
           isEmpty={!hasLoans}
         />
         <MetricCard
-          label="Affordability score"
-          value={hasAffordability && affordabilityScore !== null ? `${affordabilityScore}/100` : "-"}
-          description={hasAffordability && affordabilityScore !== null ? scoreZoneLabel(affordabilityScore) : "Add profile data to see this"}
-          valueColor={hasAffordability && affordabilityScore !== null ? scoreColor(affordabilityScore) : "muted"}
-          isEmpty={!hasAffordability}
+          label="Debt-to-Income"
+          value={profile?.monthlyIncome ? `${emiToIncomeRatio}%` : "—"}
+          description={
+            profile?.monthlyIncome
+              ? emiToIncomeRatio > 40
+                ? "Above 40% safe threshold"
+                : "Within 40% safe threshold"
+              : "Add income in profile"
+          }
+          valueColor={
+            !profile?.monthlyIncome
+              ? "muted"
+              : emiToIncomeRatio > 40
+              ? "red"
+              : emiToIncomeRatio > 30
+              ? "amber"
+              : "emerald"
+          }
+          isEmpty={!profile?.monthlyIncome}
         />
         <MetricCard
           label="Debt-free by"
@@ -279,55 +244,57 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px] xl:gap-5">
           <motion.div variants={staggerContainer} initial={reduce ? false : "hidden"} animate="visible" className="space-y-4">
             <motion.div variants={fadeUpVariants} custom={0}>
-              <HealthTrendChart snapshots={snapshots} />
+              <HealthTrendChart snapshots={validSnapshots} />
             </motion.div>
 
+            {/* Priority Balances Preview — limited to top 3 to avoid duplicating the full loans page */}
             <motion.div variants={fadeUpVariants} custom={1} className="card space-y-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-[13px] font-medium text-amortix-navy">Active loans</h2>
-                  <p className="text-[11px] text-amortix-slate">See payoff progress and prioritize faster wins.</p>
+                  <h2 className="text-[13px] font-medium text-amortix-navy">Priority loans</h2>
+                  <p className="text-[11px] text-amortix-slate">Highest-interest balances to prioritize for payoff.</p>
                 </div>
-                <Link href="/loans/add" className="text-xs font-medium text-amortix-emerald">
-                  Add loan
+                <Link href="/loans" className="text-xs font-medium text-amortix-emerald hover:text-emerald-700 transition-colors">
+                  View all ({activeLoans.length})
                 </Link>
               </div>
 
-              {activeLoans.length === 0 ? (
-                <div className="py-10">
-                  <EmptyState
-                    variant="compact"
-                    title="No active loans yet"
-                    description="Add a loan or open one to start tracking repayment progress and unlock insights."
-                    action={{ label: "Add your first loan", href: "/loans/add" }}
-                  />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {activeLoans.map((loan, index) => {
-                    const paidPercentForLoan = Math.max(
-                      0,
-                      Math.min(100, ((loan.principal - loan.outstandingBalance) / Math.max(loan.principal, 1)) * 100)
-                    );
-                    const color = loanColors[index % loanColors.length];
+              <div className="space-y-3">
+                {priorityLoans.map((loan, index) => {
+                  const paidPercentForLoan = Math.max(
+                    0,
+                    Math.min(100, ((loan.principal - loan.outstandingBalance) / Math.max(loan.principal, 1)) * 100)
+                  );
+                  const color = loanColors[index % loanColors.length];
 
-                    return (
-                      <div key={loan.id} className="rounded-card border border-amortix-border-light bg-white/80 p-3 shadow-[0_12px_28px_rgba(9,17,31,0.05)]">
-                        <div className="mb-2 flex items-center justify-between gap-3">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-                            <p className="truncate text-[13px] text-amortix-navy">{loan.name}</p>
-                          </div>
-                          <span className="badge-slate">{loan.interestRate.toFixed(2)}%</span>
+                  return (
+                    <div key={loan.id} className="rounded-card border border-amortix-border-light bg-white/80 p-3 shadow-[0_12px_28px_rgba(9,17,31,0.05)]">
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                          <p className="truncate text-[13px] text-amortix-navy">{loan.name}</p>
                         </div>
-                        <div className="mb-3 flex items-center justify-between text-xs text-amortix-slate">
-                          <span>{formatCurrency(loan.outstandingBalance, currencyCode)} left</span>
-                          <span>{formatCurrency(loan.emiAmount, currencyCode)}/mo</span>
-                        </div>
-                        <LoanProgressBar value={paidPercentForLoan} color={color} />
+                        <span className="badge-slate">{loan.interestRate.toFixed(2)}%</span>
                       </div>
-                    );
-                  })}
+                      <div className="mb-3 flex items-center justify-between text-xs text-amortix-slate">
+                        <span>{formatCurrency(loan.outstandingBalance, currencyCode)} left</span>
+                        <span>{formatCurrency(loan.emiAmount, currencyCode)}/mo</span>
+                      </div>
+                      <LoanProgressBar value={paidPercentForLoan} color={color} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {activeLoans.length > 3 && (
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs text-slate-500">
+                    Showing top 3 of {activeLoans.length} active loans
+                  </span>
+                  <Link href="/loans" className="inline-flex items-center gap-1 text-xs font-semibold text-amortix-emerald hover:text-emerald-700 transition-colors">
+                    Manage all loans
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
               )}
             </motion.div>
@@ -362,8 +329,8 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
                   <span className="num text-[11px] text-amber-500 font-medium">{avgRate.toFixed(2)}%</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-[11px] text-amortix-slate">Current monthly burn</span>
-                  <span className="num text-[11px] text-slate-600 font-medium">{formatCurrency(totalEMI, currencyCode)}</span>
+                  <span className="text-[11px] text-amortix-slate">Monthly net surplus</span>
+                  <span className="num text-[11px] text-slate-600 font-medium">{monthlySurplus !== null ? formatCurrency(monthlySurplus, currencyCode) : "—"}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-[11px] text-amortix-slate">Estimated payoff horizon</span>
@@ -383,22 +350,6 @@ export default function DashboardHome({ loans, userName, profile, snapshots }: D
               </div>
 
               <DebtDistributionChart loans={distributionData} />
-            </motion.div>
-
-            <motion.div variants={fadeUpVariants} custom={2} className="card flex items-start gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 shadow-sm transition-all hover:bg-emerald-100">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-[13px] font-medium text-amortix-navy">Deep analysis workspace</h2>
-                <p className="mt-1 text-[12px] leading-6 text-amortix-slate">
-                  Get real-time debt health signals, detect interest leaks, and review your financial profile.
-                </p>
-                <Link href="/analysis" className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-amortix-emerald hover:text-emerald-700">
-                  Open analysis
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
             </motion.div>
           </motion.div>
         </section>

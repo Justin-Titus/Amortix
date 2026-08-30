@@ -9,6 +9,7 @@ import OAuthButtons from "./OAuthButtons";
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
+import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
 
 export default function LoginForm({
   callbackUrl,
@@ -20,7 +21,7 @@ export default function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const {
     register,
@@ -40,6 +41,9 @@ export default function LoginForm({
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
+        options: {
+          captchaToken: captchaToken || undefined,
+        },
       });
 
       if (authError) {
@@ -172,6 +176,11 @@ export default function LoginForm({
               )}
             </div>
           </div>
+
+          <TurnstileWidget
+            onVerify={(token) => setCaptchaToken(token)}
+            onExpire={() => setCaptchaToken(null)}
+          />
 
           <button
             type="submit"

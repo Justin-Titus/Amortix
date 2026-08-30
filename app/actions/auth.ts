@@ -1,10 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-
 import { prisma } from "@/lib/prisma";
 import { logInfo } from "@/lib/logger";
 import { withServerAction } from "@/lib/server-action-wrapper";
+import crypto from "crypto";
 
 /**
  * Creates a record in the Prisma User table for a user that just signed up via Supabase.
@@ -37,11 +37,25 @@ export async function syncUserWithPrisma(data: {
       },
     });
 
+    // Record baseline service terms consent for DPDP compliance on OAuth signup
+    try {
+      if (prisma.consentRecord) {
+        await prisma.consentRecord.create({
+          data: {
+            userId: user.id,
+            purpose: "service_terms",
+            granted: true,
+          },
+        });
+      }
+    } catch {
+      // Non-blocking for auth flow
+    }
+
     logInfo("user_prisma_sync_success", { userId: user.id, email });
     return { success: true, userId: user.id };
   });
 }
-
 
 /**
  * Sends a password reset email using Supabase.
@@ -79,8 +93,6 @@ export async function resetPassword(data: { password: string }) {
     return { success: true };
   });
 }
-
-import crypto from "crypto";
 
 const FALLBACK_LEAKED_PASSWORDS = new Set([
   "123456", "password", "12345678", "qwerty", "123456789", "12345", "1234567",
@@ -122,4 +134,3 @@ export async function isPasswordLeaked(password: string): Promise<boolean> {
     return FALLBACK_LEAKED_PASSWORDS.has(password.toLowerCase());
   }
 }
-

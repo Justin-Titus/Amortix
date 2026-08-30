@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonHero, SkeletonLine } from "@/components/ui/Skele
 
 export default function StrategyLoading() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-3">
       <SkeletonHero badgeWidth="w-36" titleWidth="w-56" descriptionWidth="w-full max-w-2xl" stats={0} withActions={false}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-5 border-t border-slate-100/60 mt-6">
           {[1, 2, 3].map((i) => (

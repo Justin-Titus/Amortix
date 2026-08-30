@@ -53,8 +53,8 @@ export default async function ChatPage({
 
   return (
     <div className="animate-fade-up mx-auto max-w-5xl h-full flex flex-col space-y-4">
-      {activeLoans.length === 0 && (
-        <div className="rounded-2xl border border-amortix-border-light bg-white">
+      {activeLoans.length === 0 ? (
+        <div className="rounded-2xl border border-amortix-border-light bg-white p-6 my-auto">
           <EmptyState
             variant="compact"
             title="Add a loan before asking strategy questions"
@@ -62,8 +62,9 @@ export default async function ChatPage({
             action={{ label: "Add your first loan", href: "/loans/add" }}
           />
         </div>
+      ) : (
+        <ChatAssistant initialInput={selectedPrompt} contextPrompts={quickPrompts} />
       )}
-      <ChatAssistant initialInput={selectedPrompt} contextPrompts={quickPrompts} />
     </div>
   );
 }

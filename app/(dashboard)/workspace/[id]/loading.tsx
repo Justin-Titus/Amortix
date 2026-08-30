@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonHero, SkeletonMetricGrid, SkeletonLine } from "@
 
 export default function WorkspaceLoading() {
   return (
-    <div className="space-y-6" role="status" aria-live="polite" aria-busy="true">
+    <div className="space-y-6 pb-3" role="status" aria-live="polite" aria-busy="true">
       <span className="sr-only">Loading workspace...</span>
       
       {/* Workspace Hero */}

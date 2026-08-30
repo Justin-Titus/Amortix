@@ -102,7 +102,7 @@ export function SkeletonList({ count = 5 }: { count?: number }) {
 
 export function SkeletonLoanDetails() {
   return (
-    <div className="animate-fade-up max-w-6xl mx-auto space-y-8">
+    <div className="animate-fade-up max-w-6xl mx-auto space-y-8 pb-3">
       <div className="flex items-center justify-between gap-4 p-4">
         <SkeletonLine className="h-5 w-32" />
         <SkeletonBlock className="h-9 w-24 rounded-lg" />
@@ -165,7 +165,7 @@ export function SkeletonLoanDetails() {
 
 export function SkeletonLoanForm() {
   return (
-    <div className="animate-fade-up max-w-4xl mx-auto space-y-6">
+    <div className="animate-fade-up max-w-4xl mx-auto space-y-6 pb-3">
       <div className="pb-2">
         <SkeletonLine className="h-5 w-40" />
       </div>

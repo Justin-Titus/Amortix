@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonLine } from "@/components/ui/Skeletons";
 
 export default function GlossaryLoading() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-3">
       <div className="glass-panel p-6">
         <div className="max-w-3xl">
           <SkeletonBlock className="h-6 w-40 rounded-full mb-5" />

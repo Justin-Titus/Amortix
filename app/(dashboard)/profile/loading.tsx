@@ -2,7 +2,7 @@ import { SkeletonBlock, SkeletonHero, SkeletonLine } from "@/components/ui/Skele
 
 export default function ProfileLoading() {
   return (
-    <div className="max-w-5xl mx-auto space-y-6" role="status" aria-live="polite" aria-busy="true">
+    <div className="max-w-5xl mx-auto space-y-6 pb-3" role="status" aria-live="polite" aria-busy="true">
       <span className="sr-only">Loading profile...</span>
       <SkeletonHero badgeWidth="w-32" titleWidth="w-48" descriptionWidth="w-full max-w-xl" />
 
